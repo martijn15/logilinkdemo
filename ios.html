@@ -1,0 +1,1151 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Logilink BSO">
+<title>Logilink BSO Ophaalapp — Demo</title>
+<style>
+/* === RESET === */
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;overflow:hidden;background:#4CAF50;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif}
+
+/* === APP SHELL === */
+#app{
+  width:100%;max-width:430px;height:100vh;height:100dvh;
+  margin:0 auto;display:flex;flex-direction:column;
+  background:#F5F5F5;position:relative;overflow:hidden;
+  box-shadow:0 0 40px rgba(0,0,0,0.3);
+}
+
+/* === VOORTGANGSBALK (dun, bovenaan) === */
+#prog-wrap{height:3px;background:rgba(255,255,255,0.3);flex-shrink:0;z-index:20}
+#prog-fill{height:100%;background:white;transition:width 0.4s ease}
+
+/* === STAP INFO BALK === */
+#stap-info{
+  background:white;border-bottom:1px solid #E0E0E0;
+  padding:10px 14px;display:flex;align-items:center;gap:10px;
+  flex-shrink:0;min-height:58px;
+}
+#stap-ic{font-size:24px;flex-shrink:0}
+#stap-txt{flex:1;min-width:0}
+#stap-titel{font-size:14px;font-weight:700;color:#1a2a3a;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#stap-desc{font-size:11px;color:#64748b;line-height:1.4;margin-top:1px;
+  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+#stap-badge{background:#4CAF50;color:white;border-radius:10px;padding:3px 9px;
+  font-size:11px;font-weight:bold;white-space:nowrap;flex-shrink:0}
+
+/* === DOTS === */
+#dots{display:flex;gap:5px;padding:7px 14px;flex-wrap:wrap;
+  background:white;border-bottom:1px solid #E0E0E0;flex-shrink:0}
+.dot{width:8px;height:8px;border-radius:50%;background:#CBD5E1;cursor:pointer;
+  transition:all 0.2s;flex-shrink:0}
+.dot.active{background:#4CAF50;transform:scale(1.5)}
+.dot.done{background:#2196F3}
+
+/* === SCHERM === */
+#scr{flex:1;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;
+  background:white;position:relative}
+
+/* === BOTTOM NAV === */
+#nav-bar{
+  background:white;border-top:1px solid #E0E0E0;
+  padding:10px 16px calc(10px + env(safe-area-inset-bottom));
+  display:flex;gap:10px;flex-shrink:0;
+}
+#nav-bar button{
+  flex:1;padding:14px 8px;border:none;border-radius:14px;
+  font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;
+  display:flex;align-items:center;justify-content:center;gap:6px;
+  min-height:52px;-webkit-appearance:none;
+}
+#btn-prev{background:#F0F0F0;color:#555}
+#btn-prev:active{background:#E0E0E0}
+#btn-next{background:linear-gradient(135deg,#4CAF50,#2E7D32);color:white;
+  box-shadow:0 3px 12px rgba(76,175,80,0.4)}
+#btn-next:active{transform:scale(0.97)}
+#btn-prev:disabled{opacity:0.35;cursor:default}
+
+/* === LOGIN === */
+#login-overlay{
+  position:absolute;inset:0;background:linear-gradient(160deg,#E8F5E9,#F1F8E9);
+  display:flex;align-items:center;justify-content:center;z-index:999;padding:28px;
+}
+.lbox{background:white;border-radius:24px;padding:36px 24px;width:100%;
+  box-shadow:0 12px 40px rgba(76,175,80,0.2);text-align:center}
+.lan{font-size:30px;font-weight:900;letter-spacing:-1px;color:#1B5E20;margin-bottom:3px}
+.lsub{font-size:14px;font-weight:600;color:#388E3C;margin-bottom:3px}
+.ltag{font-size:12px;color:#9E9E9E;margin-bottom:24px}
+.lf{width:100%;border:2px solid #E0E0E0;border-radius:14px;padding:16px;
+  font-size:17px;letter-spacing:3px;margin-bottom:14px;font-family:inherit;
+  text-align:center;-webkit-appearance:none;background:white}
+.lf:focus{outline:none;border-color:#4CAF50}
+.lf.error{border-color:#E53935}
+.lbm{width:100%;padding:17px;background:linear-gradient(135deg,#4CAF50,#2E7D32);
+  color:white;border:none;border-radius:14px;font-size:17px;font-weight:bold;
+  cursor:pointer;font-family:inherit;-webkit-appearance:none;
+  box-shadow:0 4px 16px rgba(76,175,80,0.4)}
+.lerr{color:#E53935;font-size:12px;margin-bottom:10px;display:none}
+.lft{margin-top:16px;font-size:10px;color:#BDBDBD}
+
+/* === ANIMATIONS === */
+@keyframes fade-in{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
+.fade-in{animation:fade-in 0.25s ease}
+@keyframes check-anim{0%{transform:scale(0)}60%{transform:scale(1.3)}100%{transform:scale(1)}}
+@keyframes pulse-green{0%,100%{box-shadow:0 0 0 0 rgba(76,175,80,0)}50%{box-shadow:0 0 0 8px rgba(76,175,80,0.25)}}
+@keyframes ch1{0%,100%{opacity:0.2}33%{opacity:1}}
+@keyframes ch2{0%,100%{opacity:0.2}66%{opacity:1}}
+@keyframes ch3{0%,100%{opacity:0.2}100%{opacity:1}}
+@keyframes pulse-mic{0%,100%{box-shadow:0 0 0 4px rgba(229,57,53,0.25)}50%{box-shadow:0 0 0 10px rgba(229,57,53,0.1)}}
+@keyframes pop{0%{transform:scale(0.8);opacity:0}60%{transform:scale(1.1)}100%{transform:scale(1);opacity:1}}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+
+/* === FLUTTER APP STYLES === */
+/* AppBar */
+.db{background:#1B5E20;color:white;text-align:center;padding:calc(5px + env(safe-area-inset-top)) 14px 5px;font-size:10px;font-weight:bold}
+.ab{color:white;padding:12px 14px;display:flex;align-items:center;gap:10px}
+.ab h1{font-size:15px;font-weight:bold;flex:1}
+.bb{background:rgba(255,255,255,0.2);border:1.5px solid rgba(255,255,255,0.4);
+  color:white;padding:8px 13px;border-radius:10px;font-size:13px;font-weight:bold;
+  cursor:pointer;min-height:40px;-webkit-appearance:none}
+.tl2{background:rgba(255,255,255,0.2);border:1px solid rgba(255,255,255,0.3);
+  border-radius:14px;padding:4px 10px;font-size:11px;font-weight:bold;color:white}
+
+/* PM selectie */
+.ps2{padding:16px}
+.wh{padding:14px;background:linear-gradient(135deg,#E8F5E9,#C8E6C9);border-radius:14px;
+  border:1px solid #A5D6A7;margin-bottom:14px;display:flex;align-items:center;gap:12px}
+.wi{padding:10px;background:white;border-radius:10px;font-size:22px}
+.wt h2{font-size:16px;font-weight:bold;color:#1B5E20;margin-bottom:2px}
+.wt p{font-size:12px;color:#388E3C}
+.sh2{font-size:13px;font-weight:bold;color:#424242;margin-bottom:10px}
+/* PM card - Flutter ListTile stijl */
+.pc{background:white;border-radius:14px;padding:14px 16px;margin-bottom:10px;
+  display:flex;align-items:center;gap:14px;cursor:pointer;
+  box-shadow:0 1px 4px rgba(0,0,0,0.08);border:1px solid #E8F5E9;min-height:68px}
+.pc:active{background:#F5F5F5}
+.pic{padding:10px;background:rgba(76,175,80,0.12);border-radius:10px}
+.pav{width:34px;height:34px;border-radius:50%;background:#4CAF50;color:white;
+  display:flex;align-items:center;justify-content:center;font-weight:bold;font-size:15px}
+.pn{flex:1}.pn h3{font-size:15px;font-weight:bold;margin-bottom:2px}.pn p{font-size:12px;color:#757575}
+
+/* Sticky top */
+.st{position:sticky;top:0;background:white;z-index:10;
+  box-shadow:0 2px 8px rgba(0,0,0,0.08)}
+/* Dag knoppen */
+.dr{display:grid;grid-template-columns:repeat(5,1fr);gap:5px;padding:10px}
+.dbb{background:white;border:2px solid #4CAF50;border-radius:12px;padding:9px 3px;
+  text-align:center;cursor:pointer;min-height:56px}
+.dbb.today{background:#4CAF50;border-color:#4CAF50}
+.dbb.today .dn,.dbb.today .dd{color:white}
+.dbb.sel{background:#2196F3;border-color:#2196F3}
+.dbb.sel .dn,.dbb.sel .dd{color:white}
+.dbb .dn{font-size:10px;font-weight:bold;color:#4CAF50}
+.dbb .dd{font-size:18px;font-weight:bold;color:#4CAF50}
+/* Chips */
+.cb2{background:linear-gradient(135deg,#E8F5E9,#C8E6C9);padding:9px 13px;
+  border-top:1.5px solid #A5D6A7;border-bottom:1.5px solid #A5D6A7}
+.cb2 h3{font-size:11px;color:#2E7D32;margin-bottom:5px;font-weight:600}
+.ch{display:flex;flex-wrap:wrap;gap:5px}
+.chip{background:white;border:2px solid #4CAF50;border-radius:14px;
+  padding:5px 12px;font-size:12px;font-weight:bold;color:#4CAF50;cursor:pointer;min-height:32px}
+.chip.act{background:#4CAF50;border-color:#4CAF50;color:white}
+
+/* Scroll area */
+.sa{overflow-y:auto;-webkit-overflow-scrolling:touch;padding:16px 16px 100px}
+
+/* PM secties (andere PMs) */
+.ps3{background:white;border-radius:14px;margin-bottom:12px;overflow:hidden;
+  box-shadow:0 1px 4px rgba(0,0,0,0.08)}
+.ps3.eigen{border:2px solid #4CAF50}
+.ps3.expanded{}
+.ps3h{display:flex;align-items:center;gap:12px;padding:14px 16px;cursor:pointer;
+  background:white;min-height:62px}
+.ps3.eigen .ps3h{background:#E8F5E9}
+.ps3.expanded .ps3h{background:#E8F5E9;border-bottom:1px solid #C8E6C9}
+.cv{width:28px;height:28px;background:#BDBDBD;border-radius:50%;display:flex;
+  align-items:center;justify-content:center;color:white;font-size:14px;
+  transition:all 0.3s;flex-shrink:0}
+.ps3.expanded .cv{background:#4CAF50;transform:rotate(90deg)}
+.av2{width:44px;height:44px;background:#4CAF50;border-radius:50%;display:flex;
+  align-items:center;justify-content:center;color:white;font-size:18px;
+  font-weight:bold;flex-shrink:0}
+.ps3.eigen .av2{background:#2E7D32}
+.pi2{flex:1}.pi2 h3{font-size:15px;color:#212121;font-weight:600;margin-bottom:2px}
+.pi2 p{font-size:12px;color:#757575}
+.pb2{padding:12px 16px;display:none}.ps3.expanded .pb2{display:block}
+
+/* School headers */
+.shh{padding:10px 14px;border-radius:10px;margin-bottom:10px;font-weight:bold;
+  font-size:13px;display:flex;align-items:center;justify-content:space-between;
+  gap:6px;color:white}
+.shh.b{background:#1976D2}.shh.g{background:#4CAF50}.shh.o{background:#FF9800}
+
+/* KIND CARD - Flutter Card stijl */
+.kind{background:white;border-radius:14px;overflow:hidden;margin-bottom:12px;
+  cursor:pointer;box-shadow:0 2px 6px rgba(0,0,0,0.1);transition:all 0.15s}
+.kind:active{transform:scale(0.99);box-shadow:0 1px 3px rgba(0,0,0,0.1)}
+.kind.af{background:#E8F5E9;box-shadow:0 1px 3px rgba(76,175,80,0.2)}
+.kind.ver:not(.af){background:#E3F2FD;border:2px solid #90CAF9}
+.kind.tuss:not(.af){background:#FFF3E0;border:2px solid #FFCC80}
+/* Checkbox Flutter-stijl */
+.cb3{width:28px;height:28px;border:2.5px solid #BDBDBD;border-radius:6px;
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;
+  transition:all 0.2s}
+.kind.af .cb3{background:#4CAF50;border-color:#4CAF50;animation:check-anim 0.25s ease}
+.cbc{color:white;font-size:14px;font-weight:bold;display:none}
+.kind.af .cbc{display:block}
+/* Nummer CircleAvatar */
+.nr{width:40px;height:40px;border-radius:50%;background:#4CAF50;color:white;
+  display:flex;align-items:center;justify-content:center;font-weight:bold;
+  font-size:18px;flex-shrink:0}
+.kind.tuss:not(.af) .nr{background:#FF9800}
+.kind.ver:not(.af) .nr{background:#1976D2}
+.kind.af .nr{background:#9E9E9E}
+/* Tekst */
+.nm{font-weight:bold;font-size:17px;margin-bottom:3px}
+.kind.af .nm{text-decoration:line-through;color:#9E9E9E}
+.dt{font-size:13px;color:#757575}
+/* Afgevinkt badge */
+.afgv-badge{background:#4CAF50;color:white;border-radius:10px;padding:4px 12px;
+  font-size:12px;font-weight:bold;flex-shrink:0}
+
+/* Contactknoppen - Flutter OutlinedButton.icon stijl */
+.contact-rij{display:flex;justify-content:flex-end;gap:8px;padding:0 14px 12px}
+.cbtn{display:flex;align-items:center;gap:5px;padding:5px 13px;border-radius:20px;
+  font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;
+  -webkit-appearance:none;min-height:34px;background:white}
+.cbtn-bel{border:1.5px solid #1976D2;color:#1976D2}
+.cbtn-wa{border:1.5px solid #25D366;color:#25D366}
+.cbtn:active{opacity:0.7}
+.kind.af .contact-rij{display:none}
+
+/* Busrit tabs */
+.brt{display:flex;background:#F5F5F5;border-bottom:1.5px solid #E0E0E0}
+.brtab{flex:1;padding:13px;text-align:center;cursor:pointer;font-size:13px;
+  font-weight:bold;color:#757575;border-bottom:3px solid transparent;
+  display:flex;align-items:center;justify-content:center;gap:5px;min-height:50px}
+.brtab.act{background:white;color:#4CAF50;border-bottom-color:#4CAF50}
+.tbd{background:#BDBDBD;color:white;border-radius:10px;padding:2px 8px;font-size:10px}
+.brtab.act .tbd{background:#4CAF50}
+.brp{display:none;padding:16px}.brp.act{display:block}
+
+/* Tussenstop banner */
+.tb{background:#FFF3E0;border:2px solid #FF9800;border-radius:12px;padding:12px 14px;
+  margin-bottom:12px;display:flex;align-items:center;gap:10px}
+
+/* Wacht banner */
+.wb{margin:0 0 12px;padding:14px;border-radius:12px;border:2px solid;
+  display:flex;align-items:center;gap:12px}
+.wb.wacht{background:#FFF8E1;border-color:#FFC107}
+.wb.vert{background:#E8F5E9;border-color:#4CAF50;animation:pulse-green 1s ease-in-out 3}
+.wb h4{font-size:13px;font-weight:bold;margin-bottom:2px}
+.wb.wacht h4{color:#E65100}.wb.vert h4{color:#1B5E20}
+.wb p{font-size:12px}.wb.wacht p{color:#BF360C}.wb.vert p{color:#2E7D32}
+
+/* Twee-rit banner */
+.trb{background:linear-gradient(135deg,#FFF8E1,#FFECB3);border:2px solid #FFC107;
+  padding:12px 14px;border-radius:12px;margin-bottom:12px;display:flex;align-items:center;gap:12px}
+.trb h4{font-size:13px;font-weight:bold;color:#E65100;margin-bottom:2px}
+.trb p{font-size:12px;color:#BF360C}
+
+/* Extra secties */
+.es{background:white;border-radius:14px;margin-bottom:12px;overflow:hidden;
+  box-shadow:0 1px 4px rgba(0,0,0,0.08)}
+.es.fietsen{border-left:4px solid #81C784}
+.es.zelfstandig{border-left:4px solid #64B5F6}
+.es.talint{border-left:4px solid #9C27B0}
+.eh{display:flex;align-items:center;gap:12px;padding:14px 16px;cursor:pointer;min-height:60px}
+.es.fietsen .eh{background:#F1F8E9}.es.zelfstandig .eh{background:#E3F2FD}.es.talint .eh{background:#F3E5F5}
+.ei{width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:20px}
+.es.fietsen .ei{background:#C8E6C9}.es.zelfstandig .ei{background:#BBDEFB}.es.talint .ei{background:#E1BEE7}
+.extra-body{padding:0 14px 14px}
+.ek{background:white;border:1.5px solid #E0E0E0;border-radius:12px;padding:13px;
+  margin-bottom:8px;display:flex;align-items:center;gap:12px;cursor:pointer;min-height:52px}
+.ek:active{background:#F5F5F5}
+.ek.af{background:#E8F5E9;border-color:#A5D6A7}
+.ebc{width:24px;height:24px;border:2px solid #BDBDBD;border-radius:5px;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center}
+.ek.af .ebc{background:#4CAF50;border-color:#4CAF50}
+.okb{background:#4CAF50;color:white;border-radius:8px;padding:3px 9px;font-size:11px;font-weight:bold;margin-left:auto}
+
+/* FAB knoppen */
+.vb{width:100%;padding:17px;background:linear-gradient(135deg,#4CAF50,#2E7D32);
+  color:white;border:none;border-radius:30px;font-size:16px;font-weight:bold;
+  cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;
+  box-shadow:0 4px 20px rgba(76,175,80,0.45);-webkit-appearance:none}
+.kb{width:100%;padding:17px;background:linear-gradient(135deg,#E53935,#B71C1C);
+  color:white;border:none;border-radius:30px;font-size:16px;font-weight:bold;
+  cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;
+  box-shadow:0 4px 20px rgba(229,57,53,0.45);animation:pop 0.4s ease;-webkit-appearance:none}
+.ovb{background:linear-gradient(135deg,#FF9800,#F57C00);color:white;border:none;
+  border-radius:10px;padding:7px 13px;font-size:12px;font-weight:bold;
+  cursor:pointer;white-space:nowrap;-webkit-appearance:none}
+.klaarbadge{background:#4CAF50;color:white;border-radius:8px;padding:4px 10px;font-size:12px;font-weight:bold}
+
+/* Vervoer banner (bovenaan eigen lijst) */
+.vervoer-card{background:linear-gradient(135deg,#E8F5E9,#C8E6C9);border-radius:16px;
+  padding:16px;margin-bottom:20px;display:flex;align-items:center;gap:16px;
+  border:1px solid #A5D6A7}
+.vervoer-icon{background:white;border-radius:12px;padding:12px;font-size:32px}
+.vervoer-naam{font-size:20px;font-weight:bold;color:#1B5E20}
+.vervoer-cnt{font-size:14px;color:#388E3C;margin-top:2px}
+
+/* Spraak indicator */
+.spraak-balk{cursor:pointer;transition:all 0.3s;border-bottom:1px solid #E0E0E0}
+.spraak-balk.uit{background:#FAFAFA}
+.spraak-balk.aan{background:#FFF5F5}
+.spraak-balk.match{background:#E8F5E9}
+.spraak-mic{width:48px;height:48px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all 0.3s}
+.spraak-balk.uit .spraak-mic{background:#9E9E9E}
+.spraak-balk.aan .spraak-mic{background:#E53935;animation:pulse-mic 1.2s ease-in-out infinite}
+.spraak-balk.match .spraak-mic{background:#4CAF50}
+
+.hidden{display:none!important}
+.cp{text-align:center;padding:14px;font-size:10px;color:#BDBDBD}
+
+/* Beheer app stijl */
+.beheer-item{background:white;border-radius:14px;padding:16px;margin-bottom:12px;
+  display:flex;align-items:center;gap:14px;cursor:pointer;
+  box-shadow:0 1px 4px rgba(0,0,0,0.07)}
+.beheer-item:active{background:#F5F5F5}
+.beheer-icon{width:52px;height:52px;border-radius:13px;display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0}
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="login-overlay">
+    <div class="lbox">
+      <svg width="56" height="56" viewBox="0 0 24 24" fill="#4CAF50" style="display:block;margin:0 auto 12px">
+        <path d="M17 5H3C1.9 5 1 5.9 1 7v9h2c0 1.1.9 2 2 2s2-.9 2-2h6c0 1.1.9 2 2 2s2-.9 2-2h2v-4l-3-5zM5 17c-.55 0-1-.45-1-1s.45-1 1-1 1 .45 1 1-.45 1-1 1zm11 0c-.55 0-1-.45-1-1s.45-1 1-1 1 .45 1 1-.45 1-1 1zm-1-5H3V7h12v5z"/>
+        <path d="M20 7h-1v8h3V9l-2-2z" fill="#2E7D32"/>
+      </svg>
+      <div class="lan">Logilink BSO</div>
+      <div class="lsub">Ophaalplanning</div>
+      <div class="ltag">Interactieve demo · BrAIn Apps</div>
+      <input class="lf" id="pw-in" type="password" placeholder="Wachtwoord"
+             autocomplete="off" onkeydown="if(event.key==='Enter')login()">
+      <div class="lerr" id="lerr">Onjuist wachtwoord</div>
+      <button class="lbm" onclick="login()">🔓 Toegang tot demo</button>
+      <div class="lft">© 2026 BrAIn Apps · Martijn van den Brakel</div>
+    </div>
+  </div>
+
+  <div id="prog-wrap"><div id="prog-fill" style="width:6%"></div></div>
+  <div id="stap-info">
+    <div id="stap-ic">🏠</div>
+    <div id="stap-txt">
+      <div id="stap-titel">Home — Beheer App</div>
+      <div id="stap-desc">Klik op Dagplanning om te starten!</div>
+    </div>
+    <div id="stap-badge">1 / 18</div>
+  </div>
+  <div id="dots"></div>
+  <div id="scr"></div>
+  <div id="nav-bar">
+    <button id="btn-prev" onclick="prev()" disabled>← Vorige</button>
+    <button id="btn-next" onclick="next()">Volgende →</button>
+  </div>
+</div>
+
+<script>
+
+
+// LOGIN
+function login(){
+    var pw=document.getElementById('pw-in').value.trim();
+    if(pw==='bsodemo2026'||pw==='martijn1501'){
+        var lo=document.getElementById('login-overlay');
+        if(lo) lo.style.display='none';
+        document.body.classList.add('unlocked');
+        try{sessionStorage.setItem('ll2026','1');}catch(e){}
+        render();return;
+    }
+    var e=document.getElementById('lerr'),i=document.getElementById('pw-in');
+    e.style.display='block';i.classList.add('error');i.value='';
+    setTimeout(function(){e.style.display='none';i.classList.remove('error');},2500);
+}
+window.addEventListener('load',function(){
+    try{
+        if(sessionStorage.getItem('ll2026')==='1'){
+            var lo=document.getElementById('login-overlay');
+            if(lo) lo.style.display='none';
+            document.body.classList.add('unlocked');
+            render();
+        }
+    }catch(e){}
+});
+
+// STATE
+var stap=0,kindStatus={},busTab=1,huidigePM='Sarah';
+var selPMs={'Sarah':true,'Thomas':true,'Lisa':true};
+var pmLijst=['Sarah','Thomas','Lisa','Emma','Ruud','Diana'];
+var planPMs={stint1:null,stint2:null,busje1:null};
+var delKind={};
+
+var vand=new Date(2026,3,1),ma=new Date(vand);
+ma.setDate(vand.getDate()-(vand.getDay()===0?6:vand.getDay()-1));
+var dg=['MA','DI','WO','DO','VR'];
+var dgd=Array.from({length:5},function(_,i){var d=new Date(ma);d.setDate(ma.getDate()+i);return{n:dg[i],nr:d.getDate(),v:d.toDateString()===vand.toDateString()};});
+
+var STAPPEN=[
+    {ic:'🏠',t:'Home — Beheer App',d:'De beheer app is de centrale plek voor de coördinator. Klik op Dagplanning om te starten!',s:'home'},
+    {ic:'📅',t:'Datum & Dagdeel',d:'Kies BSO of VSO en selecteer de werkdag. BSO is al geselecteerd — klik op een dag!',s:'datum'},
+    {ic:'📋',t:'Aanwezige Kinderen',d:'De app laadt automatisch alle kinderen die vandaag komen. Klik ✕ om een kind tijdelijk te verwijderen.',s:'aanwezig'},
+    {ic:'👥',t:'Selecteer Begeleiders',d:'Welke PMs werken er vandaag? Sarah, Thomas en Lisa zijn geselecteerd.',s:'pmsel'},
+    {ic:'📅',t:'PMs toewijzen aan vervoer',d:'Stap 1: wijs PMs toe aan vervoersmiddelen. Klik op een vervoer om een PM te kiezen!',s:'planning'},
+    {ic:'🔀',t:'Automatisch verdelen',d:'Eén druk op de knop — alle kinderen automatisch verdeeld over de vervoersmiddelen.',s:'verdelen'},
+    {ic:'🔐',t:'PM Ophaallijst — Inloggen',d:'Nu de PM-kant. Klik op Inloggen!',s:'auth'},
+    {ic:'📋',t:'AVG & Privacyverklaring',d:'Bij het eerste gebruik toont de app de privacyverklaring. Klik op Akkoord om verder te gaan.',s:'avg'},
+    {ic:'👤',t:'Kies je naam',d:'Elke PM kiest zijn eigen naam en ziet direct zijn persoonlijke lijst. Klik op een naam!',s:'pmkies'},
+    {ic:'📅',t:'Dagknoppen & eigen lijst',d:'Bovenaan zie je de spraakbalk — tik erop en zeg een kindernaam om hem af te vinken! Per kind ook WhatsApp/Bel knoppen.',s:'lijst'},
+    {ic:'👥',t:'Lijsten van andere PMs',d:'Klik op een PM-sectie om die open of dicht te klappen!',s:'andere'},
+    {ic:'🏫',t:'Verderop gelegen school',d:'Kinderen bij een verder gelegen school zijn blauw. Klik op "Overstappers uitgestapt" als ze zijn overgestapt.',s:'specschool'},
+    {ic:'🔄',t:'Tussenstop',d:'Kinderen naar een andere BSO-locatie. De banner wordt groen zodra alle tussenstop-kinderen af zijn!',s:'tussenstop'},
+    {ic:'🚌',t:'Twee busritten',d:'Klik op de tabs om te wisselen tussen Busrit 1 en Busrit 2!',s:'busrit'},
+    {ic:'⏳',t:'Wacht op busje',d:'Een Stint-PM die wacht op de 2e busrit. Klik op de knop om de melding te simuleren!',s:'wacht'},
+    {ic:'🚶',t:'Fietsen, Zelfstandig & Naschools',d:'Kinderen die zelfstandig of via naschools programma komen. Tik op een kind om af te vinken!',s:'extra'},
+    {ic:'✅',t:'Alles afvinken',d:'Vink kinderen af of gebruik de grote knop. Tik op het 📞 of WhatsApp icoon om een ouder te bellen. Onderaan staan de noodcontacten.',s:'afvinken'},
+    {ic:'👋',t:'Bedankt!',d:'Dat was de volledige demo van de Logilink BSO Ophaalapp. Interesse? Neem contact op!',s:'bedankt'},
+];
+
+// HELPERS
+function dagRij(sel){
+    return '<div class="dr">'+dgd.map(function(d,i){return '<div class="dbb'+(d.v?' today':'')+(i===sel?' sel':'')+'" onclick="selDag('+i+')"><div class="dn">'+d.n+'</div><div class="dd">'+d.nr+'</div></div>';}).join('')+'</div>';
+}
+window.selDag=function(i){document.querySelectorAll('.dbb').forEach(function(b,j){b.classList.toggle('sel',j===i);});};
+
+function chips(act){
+    var w=Object.keys(selPMs).filter(function(k){return selPMs[k];});
+    return '<div class="cb2"><h3>👥 Vandaag werken:</h3><div class="ch">'+w.map(function(n){return '<div class="chip'+(n===act?' act':'')+'" onclick="selChip(\''+n+'\')">'+n+'</div>';}).join('')+'</div></div>';
+}
+window.selChip=function(n){document.querySelectorAll('.chip').forEach(function(c){c.classList.toggle('act',c.textContent===n);});};
+
+function appB(back,cnt,kleur){
+    kleur=kleur||'#4CAF50';
+    var donker=kleur==='#4CAF50'?'#1B5E20':(kleur==='#FF9800'?'#E65100':'#1565C0');
+    return '<div class="db" style="background:'+donker+';">DEMO · Logilink BSO Ophaalapp</div>'
+        +'<div class="ab" style="background:'+kleur+';">'
+        +(back?'<div class="bb" onclick="naarPMKies()">← Terug</div>':'')
+        +'<h1>PM Ophaallijst</h1>'
+        +(cnt!==undefined?'<div class="tl2">👦 '+cnt+'</div>':'')
+        +'<div onclick="toonNoodcontacten()" style="background:rgba(183,28,28,0.85);border:none;color:white;border-radius:20px;padding:5px 10px 5px 8px;display:flex;align-items:center;gap:5px;font-size:12px;font-weight:700;cursor:pointer;flex-shrink:0;letter-spacing:0.3px;"><svg width="13" height="13" viewBox="0 0 24 24" fill="white"><path d="M6.62 10.79c1.44 2.83 3.76 5.14 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z"/></svg>Nood</div>'
+        +'</div>';
+}
+window.sluitNood=function(){if(window._noodMo&&window._noodMo.parentElement)window._noodMo.parentElement.removeChild(window._noodMo);};
+window.toonNoodcontacten=function(){
+    var sc=document.getElementById('scr');
+    var mo=document.createElement('div');
+    mo.style.cssText='position:absolute;inset:0;background:rgba(0,0,0,0.45);z-index:50;display:flex;align-items:flex-end;';
+    mo.innerHTML='<div data-nood="1" style="background:white;border-radius:20px 20px 0 0;padding:22px 20px;width:100%;">'
+        +'<div style="display:flex;align-items:center;gap:10px;margin-bottom:18px;">'
+        +'<span style="font-size:24px;">🚨</span><span style="font-size:17px;font-weight:bold;">Noodcontacten</span>'
+        +'<div onclick="sluitNood()" style="margin-left:auto;cursor:pointer;font-size:22px;color:#9E9E9E;">✕</div></div>'
+        +'<div style="display:flex;flex-direction:column;gap:9px;">'
+        +'<div style="background:#F5F5F5;border-radius:12px;padding:13px 14px;display:flex;align-items:center;gap:12px;">'
+        +'<div style="flex:1;"><div style="font-size:14px;font-weight:bold;">👤 Collega</div><div style="font-size:12px;color:#757575;">In de echte app: naam + nummer</div></div>'
+        +'<button onclick="belCoord()" style="padding:7px 14px;border:1.5px solid #1976D2;border-radius:20px;background:white;color:#1976D2;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;">📞 Bel</button></div>'
+        +'<div style="background:#F5F5F5;border-radius:12px;padding:13px 14px;display:flex;align-items:center;gap:12px;">'
+        +'<div style="flex:1;"><div style="font-size:14px;font-weight:bold;">🏢 Hoofdkantoor</div><div style="font-size:12px;color:#757575;">088-1234567</div></div>'
+        +'<button onclick="belCoord()" style="padding:7px 14px;border:1.5px solid #1976D2;border-radius:20px;background:white;color:#1976D2;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;">📞 Bel</button></div>'
+        +'<div style="background:#FFF3E0;border-radius:12px;padding:13px 14px;display:flex;align-items:center;gap:12px;">'
+        +'<div style="flex:1;"><div style="font-size:14px;font-weight:bold;color:#E65100;">🔴 Alarmcentrale</div><div style="font-size:12px;color:#E65100;font-weight:bold;">112</div></div>'
+        +'<button onclick="belAlarm()" style="padding:7px 14px;border:none;border-radius:20px;background:#E53935;color:white;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;">🚨 112</button></div>'
+        +'</div></div>';
+    mo.onclick=function(e){if(e.target===mo)mo.remove();};
+    window._noodMo=mo;
+    sc.style.position='relative';sc.appendChild(mo);
+};
+
+function kindHtml(id,nr,naam,lft,type,extra){
+    extra=extra||'';
+    var af=kindStatus[id]||false;
+    var cls='kind'+(af?' af':(type==='ver'?' ver':(type==='tuss'?' tuss':'')));
+    var em=type==='tuss'?' 📍':(type==='ver'?' 🏫':'');
+    var kleurNr=af?'#9E9E9E':(type==='ver'?'#1976D2':(type==='tuss'?'#FF9800':'#4CAF50'));
+    var afvBadge=af?'<div class="afgv-badge">'+(type==='tuss'?'Afgeleverd':'Opgehaald')+'</div>':'';
+    var contactRij='<div class="contact-rij">'
+        +'<button class="cbtn cbtn-bel" onclick="event.stopPropagation();belOuder(\''+naam+'\')">'
+        +'<svg width="13" height="13" viewBox="0 0 24 24" fill="#1976D2"><path d="M6.62 10.79c1.44 2.83 3.76 5.14 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z"/></svg>Bellen</button>'
+        +'<button class="cbtn cbtn-wa" onclick="event.stopPropagation();waOuder(\''+naam+'\')">'
+        +'<svg width="13" height="13" viewBox="0 0 24 24" fill="#25D366"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.123.556 4.115 1.529 5.845L0 24l6.335-1.51A11.933 11.933 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.818a9.808 9.808 0 01-4.983-1.36l-.358-.213-3.76.897.938-3.665-.233-.375A9.818 9.818 0 012.182 12C2.182 6.574 6.574 2.182 12 2.182S21.818 6.574 21.818 12 17.426 21.818 12 21.818z"/></svg>WhatsApp</button>'
+        +'</div>';
+    return '<div class="'+cls+'" id="k-'+id+'" onclick="togKind(\''+id+'\')">'
+        +'<div style="display:flex;align-items:center;gap:14px;padding:16px 16px '+(af?'16':'8')+'px;">'
+        +'<div class="cb3"><div class="cbc">✓</div></div>'
+        +'<div class="nr" style="background:'+kleurNr+';">'+nr+'</div>'
+        +'<div style="flex:1;min-width:0;">'
+        +'<div class="nm">'+naam+em+'</div>'
+        +'<div class="dt">'+lft+' jaar'+(type==='ver'?' • School':'')+(type==='tuss'?' • Tussenstop':'')+'</div>'
+        +'</div>'
+        +afvBadge
+        +'</div>'
+        +contactRij
+        +'</div>';
+}
+
+window.belOuder=function(naam){alert('Demo: Bellen naar ouder van '+naam+'\n\nIn de echte app wordt het telefoonnummer van de ouder gebeld.');};
+window.waOuder=function(naam){alert('Demo: WhatsApp naar ouder van '+naam+'\n\nIn de echte app opent WhatsApp met een vooraf ingesteld bericht aan de ouder.');};
+
+window.togKind=function(id){
+    kindStatus[id]=!kindStatus[id];
+    var el=document.getElementById('k-'+id);
+    if(el) el.classList.toggle('af',kindStatus[id]);
+    chkTuss();chkVink();
+};
+function chkTuss(){
+    var b=document.getElementById('tuss-b');
+    if(!b)return;
+    if(['t1','t2'].every(function(id){return kindStatus[id];})){
+        b.style.background='#E8F5E9';b.style.borderColor='#4CAF50';
+        b.innerHTML='<span style="font-size:20px;">🔄</span><div style="flex:1;"><div style="font-weight:bold;font-size:12px;color:#2E7D32;">✓ Alle tussenstop kinderen afgeleverd!</div></div><span class="klaarbadge">✓ Klaar</span>';
+    }
+}
+function chkVink(){
+    var btn=document.getElementById('vink-b');if(!btn)return;
+    var ids=['a1','a2','a3','a4','a5'],af=ids.filter(function(id){return kindStatus[id];}).length;
+    var sp=btn.querySelector('span:last-child');if(sp)sp.textContent='Vink Alle Kinderen Af ('+af+'/5)';
+    if(af===5){btn.style.display='none';var kd=document.getElementById('klaar-d');if(kd)kd.classList.remove('hidden');}
+}
+
+function pijl(){return '';} // iOS: geen klik-hints nodig
+function scrPijl(){return '';} // iOS: swipe vanzelf
+function volgKnop(){return '';} // iOS: navigatie via bottom nav bar
+
+// SCHERMEN
+var kiLijst=[{n:'Alexander',l:7},{n:'Benthe',l:8},{n:'Carlijn',l:6},{n:'Emma B.',l:9},{n:'Figo',l:7},{n:'Hidde',l:9},{n:'Imke',l:7},{n:'Jasmijn',l:8},{n:'Jeske',l:11},{n:'Jinte',l:6},{n:'Luc',l:8},{n:'Mare-linde',l:7},{n:'Mirthe A.',l:7},{n:'Mirthe V.',l:5},{n:'Noah',l:9},{n:'Ravi',l:6},{n:'Sytske',l:8},{n:'Tycho',l:10},{n:'Lauren v/d Dijk',l:9},{n:'Deven',l:5},{n:'Gilyanne',l:8},{n:'Jinthe',l:9},{n:'Marcel',l:7},{n:'Sigrid',l:11}];
+
+var aanwKi=[{n:'Alexander van den Berg',l:7},{n:'Benthe de Vries',l:8},{n:'Carlijn Jansen',l:6},{n:'Deven Smit',l:5},{n:'Emma Bakker',l:9},{n:'Figo Peters',l:7},{n:'Gilyanne van Dam',l:8},{n:'Hidde Mulder',l:9},{n:'Imke de Boer',l:7},{n:'Jasmijn Visser',l:8},{n:'Jeske Hendriks',l:11},{n:'Jinte Meijer',l:6},{n:'Jinthe de Groot',l:9},{n:'Lauren van Dijk',l:9,ver:true},{n:'Luc Smeets',l:8},{n:'Marcel de Jong',l:7},{n:'Mare-linde Bos',l:7},{n:'Mirthe Arends',l:7},{n:'Mirthe van Vliet',l:5},{n:'Noah Terpstra',l:9},{n:'Ravi de Bruin',l:6},{n:'Sigrid van der Berg',l:11,ver:true},{n:'Sytske Dijkstra',l:8},{n:'Tycho Bosman',l:10}];
+
+function scherm(s){
+    switch(s){
+    case 'home': return schHome();
+    case 'datum': return schDatum();
+    case 'aanwezig': return schAanwezig();
+    case 'pmsel': return schPMSel();
+    case 'planning': return schPlanning();
+    case 'verdelen': return schVerdelen();
+    case 'auth': return schAuth();
+        case 'avg': return schAVG();
+    case 'pmkies': return schPMKies();
+    case 'lijst': return schLijst();
+    case 'andere': return schAndere();
+    case 'specschool': return schSpecSchool();
+    case 'tussenstop': return schTussenstop();
+    case 'busrit': return schBusrit();
+    case 'wacht': return schWacht();
+    case 'extra': return schExtra();
+    case 'afvinken': return schAfvinken();
+    case 'bedankt': return schBedankt();
+    }
+    return '<div style="padding:20px;color:#999;">Scherm niet gevonden</div>';
+}
+
+function schHome(){
+    var h='<div class="db">🔵 DEMO · Logilink BSO Ophaalapp</div><div class="ab"><h1>🏠 Logilink BSO Ophaalapp</h1></div>';
+    h+='<div style="overflow-y:auto;max-height:540px;padding:12px;">';
+    h+='<div style="background:linear-gradient(135deg,#E3F2FD,#BBDEFB);border-radius:14px;padding:14px;margin-bottom:14px;display:flex;align-items:center;gap:12px;"><div style="width:48px;height:48px;background:white;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:24px;">🛡️</div><div><div style="font-size:15px;font-weight:800;color:#1565C0;">Welkom, Coördinator</div><div style="font-size:11px;color:#1976D2;margin-top:2px;">Logilink BSO Ophaalapp — Beheer</div></div></div>';
+    h+='<div onclick="simOffline()" style="background:#FFEBEE;border:1.5px dashed #E53935;border-radius:12px;padding:10px 14px;margin-bottom:12px;display:flex;align-items:center;gap:10px;cursor:pointer;"><span style="font-size:20px;">📶</span><div><div style="font-size:13px;font-weight:bold;color:#E53935;">Demo: Offline modus</div><div style="font-size:11px;color:#757575;">Tik om te zien hoe de app reageert zonder internet</div></div></div>';
+    h+='<div style="font-size:13px;font-weight:700;color:#212121;margin-bottom:8px;">Planning & Organisatie</div>';
+    h+=pijl();
+    var items=[{i:'📅',t:'Dagplanning',s:'Plan kinderen, PMs en vervoer',a:'gaNaar(1)'},{i:'👶',t:'Kinderen Database',s:'Beheer kinderen',a:''},{i:'🛵',t:'Vervoermiddelen',s:'Beheer stints en bussen',a:''},{i:'🏫',t:'Scholen & Tussenstop',s:'Beheer schoollocaties',a:''},{i:'👤',t:'Pedagogisch Medewerkers',s:'Beheer PM gegevens',a:''},{i:'⚙️',t:'Instellingen',s:'Logo, kleuren, organisatie',a:''}];
+    items.forEach(function(item){h+='<div onclick="'+item.a+'" style="background:white;border:1.5px solid #E0E0E0;border-radius:14px;padding:14px;margin-bottom:10px;display:flex;align-items:center;gap:12px;cursor:pointer;box-shadow:0 1px 4px rgba(0,0,0,0.06);"><div style="width:48px;height:48px;background:#E3F2FD;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:22px;">'+item.i+'</div><div style="flex:1;"><div style="font-size:14px;font-weight:700;">'+item.t+'</div><div style="font-size:11px;color:#757575;margin-top:2px;">'+item.s+'</div></div><div style="color:#BDBDBD;font-size:18px;">›</div></div>';});
+        h+='</div>';
+    return h;
+}
+
+function schDatum(){
+    var sel=window._dagdeel||'BSO',selD=window._selDag!==undefined?window._selDag:(vand.getDay()===0?4:vand.getDay()-1);
+    var dagKn='';
+    for(var i=0;i<5;i++){var d2=new Date(ma);d2.setDate(ma.getDate()+i);var isV=d2.toDateString()===vand.toDateString(),isS=i===selD;var bg=isV?'#4CAF50':(isS?'#2196F3':'white'),bdr=isV?'#4CAF50':(isS?'#2196F3':'#2196F3'),txt=isV||isS?'white':'#2196F3';dagKn+='<div onclick="selDatum('+i+')" style="background:'+bg+';border:2px solid '+bdr+';border-radius:10px;padding:8px 4px;text-align:center;cursor:pointer;"><div style="font-size:10px;font-weight:bold;color:'+txt+';">'+dg[i]+'</div><div style="font-size:18px;font-weight:bold;color:'+txt+';">'+d2.getDate()+'</div></div>';}
+    var h='<div class="db">🔵 DEMO · Logilink BSO Ophaalapp</div><div class="ab" style="background:#1565C0;"><div class="bb" onclick="prev()">←</div><h1>📅 Dagplanning — Datum</h1></div>';
+    h+='<div style="overflow-y:auto;max-height:510px;padding:12px;">';
+    h+='<div style="background:white;border:2px solid #2196F3;border-radius:14px;padding:14px;margin-bottom:16px;"><div style="font-size:14px;font-weight:bold;margin-bottom:12px;">⏰ Dagdeel Selectie</div><div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">';
+    h+='<div onclick="selDagdeel(\'VSO\')" style="background:'+(sel==='VSO'?'#E8F5E9':'#F5F5F5')+';border:'+(sel==='VSO'?'2px solid #4CAF50':'1.5px solid #E0E0E0')+';border-radius:10px;padding:14px;text-align:center;cursor:pointer;"><div style="font-size:16px;font-weight:bold;color:'+(sel==='VSO'?'#2E7D32':'#9E9E9E')+';">VSO</div><div style="font-size:11px;color:'+(sel==='VSO'?'#2E7D32':'#9E9E9E')+';margin-top:4px;">07:00 - 08:30</div></div>';
+    h+='<div onclick="selDagdeel(\'BSO\')" style="background:'+(sel==='BSO'?'#E8F5E9':'#F5F5F5')+';border:'+(sel==='BSO'?'2px solid #4CAF50':'1.5px solid #E0E0E0')+';border-radius:10px;padding:14px;text-align:center;cursor:pointer;">'+pijl()+'<div style="font-size:16px;font-weight:bold;color:'+(sel==='BSO'?'#2E7D32':'#9E9E9E')+';">BSO</div><div style="font-size:11px;color:'+(sel==='BSO'?'#2E7D32':'#9E9E9E')+';margin-top:4px;">14:00 - 18:00</div></div>';
+    h+='</div></div><div style="font-size:14px;font-weight:bold;margin-bottom:12px;">Deze Week</div><div style="display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin-bottom:16px;">'+dagKn+'</div></div>';
+    return h;
+}
+window.selDagdeel=function(dd){window._dagdeel=dd;document.getElementById('scr').innerHTML=schDatum();};
+window.selDatum=function(i){window._selDag=i;document.getElementById('scr').innerHTML=schDatum();setTimeout(next,400);};
+
+function schAanwezig(){
+    var zicht=aanwKi.filter(function(_,i){return !delKind[i];});
+    var h='<div class="db">🔵 DEMO · Logilink BSO Ophaalapp</div>';
+    h+='<div class="ab" style="background:#4CAF50;"><div class="bb" onclick="prev()">←</div><h1>📋 Aanwezige Kinderen</h1></div>';
+    h+='<div style="background:#388E3C;color:white;padding:8px 14px;font-size:11px;">✅ '+zicht.length+' kinderen geladen — woensdag 1 april 2026</div>';
+    h+='<div style="background:#FFF8E6;padding:10px 12px;border-bottom:1px solid #FFE0B2;"><button onclick="alert(\'Demo: Flex kind toevoegen\\nIn de echte app kun je hier een extra kind toevoegen.\')" style="width:100%;padding:10px;background:linear-gradient(135deg,#FF9800,#F57C00);color:white;border:none;border-radius:10px;font-size:12px;font-weight:bold;cursor:pointer;font-family:inherit;">👥 + Flex/Extra Kind Toevoegen</button></div>';
+
+    // PM advies berekening (max 8 per stint, max 8 per busje, max 6 per lopende PM)
+    var n=zicht.length;
+    var verNa=zicht.filter(function(k){return k.ver;}).length;
+    var normN=n-verNa;
+    // Stints (lopend/rijdend vervoer): max 8, 1 PM per stint
+    var stintsNodig=Math.min(2,Math.ceil(normN/8));
+    var inStints=Math.min(normN,stintsNodig*8);
+    var restNaStints=Math.max(0,normN-inStints);
+    // Busje: max 8, 1 PM
+    var busjeNodig=restNaStints>0?1:0;
+    var inBusje=Math.min(restNaStints,8);
+    var restNaBusje=Math.max(0,restNaStints-8);
+    // Lopen: max 6 kinderen per PM
+    var loopPMs=restNaBusje>0?Math.ceil(restNaBusje/6):0;
+    // Ver gelegen school: altijd 1 extra PM als er kinderen zijn
+    var schoolPMs=verNa>0?1:0;
+    var totaalPMs=stintsNodig+busjeNodig+loopPMs+schoolPMs;
+    var kleurBg=totaalPMs<=3?'#E8F5E9':totaalPMs<=5?'#FFF8E1':'#FFF3E0';
+    var kleurBdr=totaalPMs<=3?'#A5D6A7':totaalPMs<=5?'#FFE082':'#FFCC80';
+    var kleurTxt=totaalPMs<=3?'#2E7D32':totaalPMs<=5?'#E65100':'#BF360C';
+    var kleurBadge=totaalPMs<=3?'#4CAF50':totaalPMs<=5?'#FF9800':'#E53935';
+
+    h+='<div style="margin:10px 10px 4px;background:'+kleurBg+';border:1.5px solid '+kleurBdr+';border-radius:14px;padding:12px 14px;">';
+    h+='<div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">';
+    h+='<div style="font-size:22px;">🧮</div>';
+    h+='<div style="flex:1;"><div style="font-size:14px;font-weight:bold;color:'+kleurTxt+';">Advies: '+totaalPMs+' PMs nodig</div>';
+    h+='<div style="font-size:11px;color:'+kleurTxt+';margin-top:1px;opacity:0.85;">'+n+' kinderen · 1:'+Math.round(n/Math.max(totaalPMs,1)*10)/10+' verhouding</div></div>';
+    h+='<div style="background:'+kleurBadge+';color:white;border-radius:20px;padding:5px 13px;font-size:15px;font-weight:900;">'+totaalPMs+'×</div>';
+    h+='</div>';
+    h+='<div style="display:flex;flex-wrap:wrap;gap:5px;">';
+    for(var si=0;si<stintsNodig;si++){
+        var cnt2=si===stintsNodig-1?inStints-si*8:8;
+        h+='<div style="background:white;border:1px solid '+kleurBdr+';border-radius:8px;padding:4px 10px;font-size:11px;font-weight:600;color:'+kleurTxt+';">🛵 Stint '+(si+1)+': '+cnt2+'</div>';
+    }
+    if(busjeNodig)h+='<div style="background:white;border:1px solid '+kleurBdr+';border-radius:8px;padding:4px 10px;font-size:11px;font-weight:600;color:'+kleurTxt+';">🚌 Busje: '+inBusje+'</div>';
+    if(loopPMs)h+='<div style="background:white;border:1px solid '+kleurBdr+';border-radius:8px;padding:4px 10px;font-size:11px;font-weight:600;color:'+kleurTxt+';">🚶 Lopen '+loopPMs+'× ('+restNaBusje+' kind.)</div>';
+    if(schoolPMs)h+='<div style="background:white;border:1px solid '+kleurBdr+';border-radius:8px;padding:4px 10px;font-size:11px;font-weight:600;color:'+kleurTxt+';">🏫 School: '+verNa+' kind.</div>';
+    h+='</div>';
+    h+='<div style="font-size:10px;color:'+kleurTxt+';opacity:0.65;margin-top:7px;">* Max 8 per stint/busje · max 6 per lopende PM · pas aan in planning</div>';
+    h+='</div>';
+
+    h+='<div style="overflow-y:auto;max-height:370px;padding:8px 10px 80px;">';
+    aanwKi.forEach(function(k,i){
+        if(delKind[i])return;
+        h+='<div style="background:white;border:2px solid '+(k.ver?'#90CAF9':'#C8E6C9')+';border-radius:12px;padding:11px 13px;margin-bottom:7px;display:flex;align-items:center;gap:11px;"><div style="width:40px;height:40px;background:'+(k.ver?'#2196F3':'#4CAF50')+';border-radius:50%;display:flex;align-items:center;justify-content:center;color:white;font-size:16px;font-weight:bold;">'+k.n[0]+'</div><div style="flex:1;"><div style="font-size:13px;font-weight:bold;">'+k.n+(k.ver?' <span style="background:#E3F2FD;color:#1565C0;border-radius:12px;padding:2px 7px;font-size:10px;">🏫 Ver gelegen</span>':'')+'</div><div style="font-size:11px;color:#757575;margin-top:2px;">'+k.l+' jaar</div></div><span onclick="delK('+i+')" style="width:26px;height:26px;border:2px solid #FF9800;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;color:#FF9800;font-size:13px;font-weight:bold;">✕</span></div>';
+    });
+    h+='</div>';
+    h+='<div style="position:sticky;bottom:0;background:white;border-top:1px solid #E0E0E0;padding:10px;">'+pijl()+'<button onclick="next()" style="width:100%;padding:13px;background:linear-gradient(135deg,#4CAF50,#388E3C);color:white;border:none;border-radius:11px;font-size:13px;font-weight:bold;cursor:pointer;font-family:inherit;">→ Doorgaan met '+zicht.length+' kinderen</button></div>';
+    return h;
+}
+window.delK=function(i){delKind[i]=true;document.getElementById('scr').innerHTML=schAanwezig();};
+
+function schPMSel(){
+    var n=Object.values(selPMs).filter(Boolean).length;
+    var h='<div class="db">🔵 DEMO · Logilink BSO Ophaalapp</div>';
+    h+='<div style="background:#00BCD4;color:white;padding:12px 14px;"><div style="display:flex;align-items:center;gap:10px;"><div onclick="prev()" style="background:rgba(255,255,255,0.25);border-radius:6px;padding:4px 10px;font-size:13px;font-weight:bold;cursor:pointer;">←</div><div style="font-size:15px;font-weight:bold;">Selecteer Begeleiders · 24 kinderen</div></div></div>';
+    h+='<div style="text-align:right;padding:2px 12px 4px;border-bottom:1px solid #E0E0E0;">'+scrPijl()+'</div>';
+    h+='<div style="overflow-y:auto;max-height:380px;padding:8px 10px 80px;">';
+    pmLijst.forEach(function(pm){
+        var s=!!selPMs[pm];
+        h+='<div style="background:white;border:1.5px solid '+(s?'#2196F3':'#E0E0E0')+';border-radius:12px;padding:12px 14px;margin-bottom:8px;display:flex;align-items:center;gap:12px;cursor:pointer;"><div style="width:40px;height:40px;background:#BDBDBD;border-radius:50%;display:flex;align-items:center;justify-content:center;color:white;font-size:16px;font-weight:bold;">'+pm[0]+'</div><div style="flex:1;"><div style="font-size:14px;font-weight:bold;">'+pm+'</div><div style="font-size:11px;color:#757575;">Pedagogisch Medewerker</div></div><div style="width:22px;height:22px;border:2px solid '+(s?'#2196F3':'#BDBDBD')+';border-radius:4px;background:'+(s?'#2196F3':'white')+';display:flex;align-items:center;justify-content:center;">'+(s?'<span style="color:white;font-size:13px;font-weight:bold;">✓</span>':'')+'</div></div>';
+    });
+    h+='</div>';
+    h+='<div style="position:sticky;bottom:0;background:white;border-top:1px solid #E0E0E0;padding:10px;">'+pijl()+'<div onclick="next()" style="background:linear-gradient(135deg,#2196F3,#1976D2);border-radius:11px;padding:13px;display:flex;align-items:center;justify-content:center;cursor:pointer;"><span style="font-size:13px;font-weight:bold;color:white;">Selecteer PMs ('+n+' geselecteerd)</span></div></div>';
+    return h;
+}
+
+function alleKlaar(){return ['stint1','stint2','busje1'].filter(function(k){return !!planPMs[k];}).length>=3;}
+function schPlanning(){
+    var ak=alleKlaar();
+    var h='<div class="db">🔵 DEMO · Logilink BSO Ophaalapp</div>';
+    h+='<div class="ab" style="background:#2196F3;"><div class="bb" onclick="prev()">←</div><h1 style="font-size:13px;">woensdag 1 april <span style="background:#4CAF50;border-radius:12px;padding:2px 8px;font-size:10px;">LIVE</span></h1></div>';
+    h+='<div style="position:sticky;top:0;z-index:10;background:white;">';
+    h+='<div style="background:#E3F2FD;padding:10px 12px;display:flex;align-items:center;gap:10px;border-bottom:1px solid #BBDEFB;"><div style="background:#2196F3;color:white;border-radius:8px;padding:5px 10px;font-size:12px;font-weight:900;">STAP 1</div><div style="flex:1;font-size:13px;font-weight:bold;color:#1565C0;">Wijs PMs toe aan vervoer!</div><div style="background:'+(ak?'#4CAF50':'#FF9800')+';color:white;border-radius:20px;padding:4px 10px;font-size:11px;font-weight:bold;">'+(ak?'✓ Klaar':['stint1','stint2','busje1'].filter(function(k){return !!planPMs[k];}).length+'/3 PMs')+'</div></div>';
+    if(ak){h+=pijl();h+='<div onclick="gaNaar(5)" style="background:linear-gradient(135deg,#7B1FA2,#9C27B0);padding:14px;display:flex;align-items:center;justify-content:center;gap:10px;cursor:pointer;"><span style="font-size:18px;">⇄</span><span style="font-size:14px;font-weight:900;color:white;">STAP 2: Automatisch Verdelen</span></div>';}
+    else{h+='<div style="background:#E0E0E0;padding:14px;display:flex;align-items:center;justify-content:center;gap:10px;"><span style="font-size:18px;">⇄</span><span style="font-size:14px;font-weight:900;color:#9E9E9E;">STAP 2: Automatisch Verdelen</span></div>';}
+    h+=scrPijl()+'</div>';
+    h+='<div style="overflow-y:auto;max-height:420px;padding:10px 10px 80px;">';
+    ['stint1','stint2','busje1'].forEach(function(key){
+        var naam=key==='stint1'?'Stint 1':(key==='stint2'?'Stint 2':'Busje - Rit 1'),ic=key.startsWith('s')?'🛵':'🚌';
+        var pmW=planPMs[key],isI=!!pmW;
+        h+='<div style="background:white;border-radius:12px;padding:13px;margin-bottom:10px;box-shadow:0 1px 4px rgba(0,0,0,0.08);">';
+        h+='<div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;"><div style="width:36px;height:36px;background:'+(isI?'#E3F2FD':'#F5F5F5')+';border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:18px;">'+ic+'</div><div style="font-size:14px;font-weight:bold;">'+naam+'</div></div>';
+        h+='<div style="font-size:10px;color:#2196F3;font-weight:500;margin-bottom:2px;">Begeleider</div>';
+        h+='<div onclick="openDrop(\''+key+'\')" style="border:2px solid '+(isI?'#2196F3':'#E0E0E0')+';border-radius:8px;padding:11px 12px;display:flex;align-items:center;justify-content:space-between;cursor:pointer;background:white;">';
+        h+=pmW?'<span style="font-size:14px;font-weight:bold;">'+pmW+' <span style="background:#E8F5E9;color:#2E7D32;border-radius:12px;padding:2px 8px;font-size:10px;">✓ Actief</span></span>':'<span style="font-size:14px;color:#9E9E9E;">Geen begeleider</span>';
+        h+='<span style="color:#757575;font-size:16px;">▼</span></div></div>';
+    });
+    [['Lopen','🚶','nopm'],['Zelfstandig','🚶','count'],['Fietsen','🚴','count'],['Taxi','🚕','count'],['Naschools programma','🎓','count']].forEach(function(v){
+        h+='<div style="background:white;border-radius:12px;padding:13px;margin-bottom:10px;box-shadow:0 1px 4px rgba(0,0,0,0.08);"><div style="font-size:14px;font-weight:bold;">'+v[1]+' '+v[0]+'</div></div>';
+    });
+    h+='</div>';
+    h+='<div id="pm-modal" style="display:none;position:absolute;bottom:0;left:0;right:0;background:white;border-radius:16px 16px 0 0;padding:16px;box-shadow:0 -4px 20px rgba(0,0,0,0.18);z-index:20;"><div style="font-size:13px;font-weight:bold;margin-bottom:10px;" id="pm-modal-t">Kies PM</div><div id="pm-modal-l"></div></div>';
+    return h;
+}
+window.openDrop=function(key){
+    var sc=document.getElementById('scr');
+    var mo=sc.querySelector('#pm-modal');if(!mo)return;
+    var t=sc.querySelector('#pm-modal-t');if(t)t.textContent='Kies PM voor '+key;
+    var beschikbaar=Object.keys(selPMs).filter(function(pm){return selPMs[pm]&&!Object.keys(planPMs).some(function(k){return k!==key&&planPMs[k]===pm;});});
+    var html='<div onclick="selPM(null,\''+key+'\')" style="background:white;border:1.5px solid #E0E0E0;border-radius:9px;padding:10px 12px;margin-bottom:7px;cursor:pointer;color:#9E9E9E;font-size:13px;">Geen begeleider</div>';
+    beschikbaar.forEach(function(pm){
+        var g=planPMs[key]===pm;
+        html+='<div onclick="selPM(\''+pm+'\',\''+key+'\')" style="background:'+(g?'#E8F5E9':'white')+';border:1.5px solid '+(g?'#4CAF50':'#E0E0E0')+';border-radius:9px;padding:10px 12px;margin-bottom:7px;display:flex;align-items:center;gap:10px;cursor:pointer;"><div style="width:32px;height:32px;background:#4CAF50;border-radius:50%;display:flex;align-items:center;justify-content:center;color:white;font-weight:bold;">'+pm[0]+'</div><div style="font-size:13px;font-weight:bold;flex:1;">'+pm+'</div>'+(g?'<span style="color:#4CAF50;font-size:16px;">✓</span>':'')+'</div>';
+    });
+    sc.querySelector('#pm-modal-l').innerHTML=html;
+    mo.style.display='block';
+    mo.onclick=function(e){e.stopPropagation();};
+    setTimeout(function(){sc.addEventListener('click',function fn(e){if(!mo.contains(e.target)){mo.style.display='none';sc.removeEventListener('click',fn);}});},50);
+};
+window.selPM=function(pm,key){
+    if(pm)planPMs[key]=pm;else delete planPMs[key];
+    document.getElementById('scr').innerHTML=schPlanning();
+};
+
+function schVerdelen(){
+    var pm1=planPMs.stint1||'Sarah',pm2=planPMs.stint2||'Thomas',pm3=planPMs.busje1||'Lisa';
+    var h='<div class="db">🔵 DEMO · Logilink BSO Ophaalapp</div><div class="ab" style="background:#1565C0;"><div class="bb" onclick="prev()">←</div><h1>⇄ Automatisch Verdelen</h1></div>';
+    h+=pijl();
+    h+='<div style="padding:10px 11px 0;"><button onclick="verzend()" style="width:100%;padding:12px;background:linear-gradient(135deg,#4CAF50,#388E3C);color:white;border:none;border-radius:11px;font-size:13px;font-weight:bold;cursor:pointer;font-family:inherit;">📤 Verzend Ophaallijsten naar PMs</button></div>';
+    h+=scrPijl();
+    h+='<div style="overflow-y:auto;max-height:440px;padding:11px;">';
+    h+='<div style="background:#E8F5E9;border:1.5px solid #A5D6A7;border-radius:10px;padding:10px 12px;margin-bottom:12px;font-size:11px;color:#1B5E20;display:flex;align-items:center;gap:8px;"><span>✅</span><span>24 kinderen automatisch verdeeld!</span></div>';
+    [['Stint 1 — '+pm1,'🛵',['Alexander','Benthe','Carlijn','Emma B.','Figo','Hidde','Imke','Jasmijn'],'#E3F2FD','#1976D2','8/8'],
+     ['Stint 2 — '+pm2,'🛵',['Jeske','Jinte','Luc','Mare-linde','Mirthe A.','Mirthe V.','Noah','Ravi'],'#E3F2FD','#1976D2','8/8'],
+     ['Busje — '+pm3,'🚌',['Sytske','Tycho','Lauren v/d Dijk 🏫'],'#FFF8E1','#FF9800','3/8'],
+     ['Taxi','🚕',['Deven Smit 🚕','Gilyanne v/d Dam 🚕'],'#F3E5F5','#7B1FA2','2'],
+     ['Fietsen','🚴',['Sigrid v/d Berg 🚴'],'#F1F8E9','#558B2F','1'],
+     ['Naschools','🎓',['Jinthe de Groot 🎓','Marcel de Jong 🎓'],'#FFF3E0','#FF9800','2']].forEach(function(g){
+        h+='<div style="background:white;border:2px solid #E0E0E0;border-radius:11px;margin-bottom:8px;overflow:hidden;"><div style="background:'+g[3]+';padding:9px 12px;display:flex;align-items:center;gap:8px;"><span style="font-size:18px;">'+g[1]+'</span><div style="flex:1;font-size:13px;font-weight:bold;color:#1565C0;">'+g[0]+'</div><span style="background:'+g[4]+';color:white;border-radius:12px;padding:2px 8px;font-size:11px;font-weight:bold;">'+g[5]+'</span></div><div style="padding:8px 10px;display:flex;flex-wrap:wrap;gap:5px;">'+g[2].map(function(k){return '<span style="background:#F5F5F5;border-radius:20px;padding:3px 9px;font-size:10px;">'+k+'</span>';}).join('')+'</div></div>';
+    });
+    h+='</div>';
+    return h;
+}
+window.verzend=function(){
+    var sc=document.getElementById('scr');
+    var sn=document.createElement('div');
+    sn.style.cssText='position:absolute;bottom:0;left:0;right:0;background:#2E7D32;color:white;padding:14px 16px;display:flex;align-items:center;gap:10px;font-size:12px;font-weight:bold;z-index:30;';
+    sn.innerHTML='<span style="font-size:18px;">✅</span><span>Planning opgeslagen! PMs kunnen nu hun ophaallijst zien.</span>';
+    sc.style.position='relative';sc.appendChild(sn);
+    setTimeout(next,2000);
+};
+
+function schAuth(){
+    return '<div style="background:#2196F3;color:white;padding:13px 16px;"><h1 style="font-size:18px;font-weight:bold;">Logilink BSO Ophaalapp</h1></div>'
+    +'<div style="background:#F8FAF5;min-height:520px;display:flex;align-items:center;justify-content:center;padding:24px;">'
+    +'<div style="background:white;border-radius:20px;padding:32px 24px;width:100%;box-shadow:0 4px 20px rgba(0,0,0,0.08);">'
+    +'<div style="text-align:center;margin-bottom:24px;">'
+    +'<svg width="52" height="52" viewBox="0 0 24 24" fill="#2196F3" style="display:block;margin:0 auto 10px;"><path d="M17 5H3C1.9 5 1 5.9 1 7v9h2c0 1.1.9 2 2 2s2-.9 2-2h6c0 1.1.9 2 2 2s2-.9 2-2h2v-4l-3-5zM5 17c-.55 0-1-.45-1-1s.45-1 1-1 1 .45 1 1-.45 1-1 1zm11 0c-.55 0-1-.45-1-1s.45-1 1-1 1 .45 1 1-.45 1-1 1zm-1-5H3V7h12v5z"/><path d="M20 7h-1v8h3V9l-2-2z" fill="#1565C0"/></svg>'
+    +'<div style="font-size:22px;font-weight:900;background:linear-gradient(135deg,#2196F3,#1565C0);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:4px;">Logilink BSO</div>'
+    +'<div style="font-size:14px;color:#2196F3;font-weight:600;margin-bottom:4px;">Ophaalplanning</div>'
+    +'<div style="font-size:12px;color:#9E9E9E;">Voer het wachtwoord in om verder te gaan</div>'
+    +'</div>'
+    +pijl()
+    +'<div style="border:1.5px solid #E0E0E0;border-radius:10px;padding:13px 14px;display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;"><span style="font-size:14px;color:#333;letter-spacing:2px;">••••••••</span><span style="font-size:18px;color:#9E9E9E;">👁️</span></div>'
+    +'<button onclick="next()" style="width:100%;padding:13px;background:linear-gradient(135deg,#2196F3,#1565C0);color:white;border:none;border-radius:10px;font-size:15px;font-weight:bold;cursor:pointer;font-family:inherit;">🔒 Inloggen</button>'
+    +'</div></div>';
+}
+
+function schAVG(){
+    return '<div style="background:#2196F3;color:white;padding:13px 16px;">'
+        +'<h1 style="font-size:18px;font-weight:bold;">Logilink BSO Ophaalapp</h1>'
+        +'</div>'
+        +'<div style="overflow-y:auto;max-height:520px;padding:20px 16px;">'
+        // Header
+        +'<div style="text-align:center;margin-bottom:20px;">'
+        +'<div style="font-size:40px;margin-bottom:8px;">🔒</div>'
+        +'<div style="font-size:18px;font-weight:bold;color:#1a2a3a;margin-bottom:6px;">Privacyverklaring</div>'
+        +'<div style="font-size:13px;color:#64748b;">Lees en accepteer voor gebruik</div>'
+        +'</div>'
+        // Kaart
+        +'<div style="background:white;border:1.5px solid #E0E0E0;border-radius:16px;padding:18px;margin-bottom:16px;box-shadow:0 2px 8px rgba(0,0,0,0.06);">'
+        +'<div style="font-size:13px;font-weight:bold;color:#1a2a3a;margin-bottom:12px;">Wij verwerken de volgende gegevens:</div>'
+        +'<div style="display:flex;flex-direction:column;gap:10px;">'
+        +'<div style="display:flex;align-items:flex-start;gap:10px;"><span style="font-size:16px;flex-shrink:0;">👶</span><div><div style="font-size:13px;font-weight:600;">Namen van kinderen</div><div style="font-size:11px;color:#64748b;margin-top:2px;">Alleen voor de dagelijkse ophaalplanning</div></div></div>'
+        +'<div style="display:flex;align-items:flex-start;gap:10px;"><span style="font-size:16px;flex-shrink:0;">📞</span><div><div style="font-size:13px;font-weight:600;">Contactgegevens ouders</div><div style="font-size:11px;color:#64748b;margin-top:2px;">Telefoonnummer voor noodgevallen</div></div></div>'
+        +'<div style="display:flex;align-items:flex-start;gap:10px;"><span style="font-size:16px;flex-shrink:0;">📅</span><div><div style="font-size:13px;font-weight:600;">Aanwezigheidsgegevens</div><div style="font-size:11px;color:#64748b;margin-top:2px;">Welke kinderen er op welke dag zijn</div></div></div>'
+        +'</div>'
+        +'</div>'
+        // Bewaartermijn
+        +'<div style="background:#F8FAFC;border:1.5px solid #E2E8F0;border-radius:12px;padding:14px;margin-bottom:16px;">'
+        +'<div style="font-size:12px;font-weight:600;color:#475569;margin-bottom:6px;">📌 Bewaartermijn & Beveiliging</div>'
+        +'<div style="font-size:12px;color:#64748b;line-height:1.6;">Gegevens worden maximaal 1 jaar bewaard en daarna automatisch verwijderd. Alle data is versleuteld opgeslagen en alleen toegankelijk voor bevoegd personeel van uw BSO.</div>'
+        +'</div>'
+        // Akkoord checkbox (decoratief in demo)
+        +'<div style="background:#E8F5E9;border:1.5px solid #A5D6A7;border-radius:12px;padding:14px;margin-bottom:20px;display:flex;align-items:center;gap:12px;">'
+        +'<div style="width:22px;height:22px;background:#4CAF50;border-radius:5px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">'
+        +'<svg width="14" height="14" viewBox="0 0 24 24" fill="white"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>'
+        +'</div>'
+        +'<div style="font-size:12px;color:#2E7D32;font-weight:500;">Ik ga akkoord met de privacyverklaring en het verwerken van persoonsgegevens conform de AVG.</div>'
+        +'</div>'
+        // Knop
+        +'<button onclick="next()" style="width:100%;padding:15px;background:linear-gradient(135deg,#2196F3,#1565C0);color:white;border:none;border-radius:14px;font-size:15px;font-weight:bold;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:8px;box-shadow:0 4px 16px rgba(33,150,243,0.35);">'
+        +'<span>✓</span><span>Akkoord & Doorgaan</span>'
+        +'</button>'
+        +'<div style="text-align:center;margin-top:12px;font-size:10px;color:#9E9E9E;">Volledige privacyverklaring beschikbaar via uw BSO-coördinator</div>'
+        +'</div>';
+}
+
+function schPMKies(){
+    var pms=Object.keys(selPMs).filter(function(k){return selPMs[k];});
+    return appB(false)+'<div class="ps2"><div class="wh"><div class="wi">👤</div><div class="wt"><h2>Welkom!</h2><p>Selecteer je naam om te beginnen</p></div></div><div class="sh">Pedagogisch Medewerkers</div>'+pms.map(function(n){return '<div class="pc" onclick="kiesPM(\''+n+'\')"><div class="pic"><div class="pav">'+n[0]+'</div></div><div class="pn"><h3>'+n+'</h3><p>Bekijk ophaallijsten</p></div><div style="color:#BDBDBD;font-size:16px;">›</div></div>';}).join('')+'<div class="cp">© 2026 BrAIn Apps · Martijn van den Brakel</div></div>';
+}
+window.kiesPM=function(n){huidigePM=n;next();};
+window.naarPMKies=function(){stap=7;render();};
+
+function maakLijst(pref,kk,toonVervoer){
+    var ver=kk.find(function(k){return k.n==='Lauren v/d Dijk';}),reg=kk.filter(function(k){return k.n!=='Lauren v/d Dijk';});
+    var h='';
+    // Vervoer-banner (Flutter: groene card bovenaan met vervoersicoon)
+    if(toonVervoer){
+        h+='<div style="background:linear-gradient(135deg,#E8F5E9,#C8E6C9);border-radius:12px;padding:12px 14px;margin-bottom:12px;display:flex;align-items:center;gap:12px;border:1px solid #A5D6A7;">'
+            +'<div style="background:white;border-radius:10px;padding:8px;font-size:26px;">🛵</div>'
+            +'<div style="flex:1;"><div style="font-size:16px;font-weight:bold;color:#1B5E20;">Stint 1</div>'
+            +'<div style="font-size:13px;color:#2E7D32;">'+kk.length+' kinderen</div></div>'
+            +'</div>';
+    }
+    if(ver){h+='<div class="shh b"><span>🏫 VERDEROP GELEGEN SCHOOL</span></div>'+kindHtml(pref+'0',1,'Lauren v/d Dijk',9,'ver','');}
+    h+='<div class="shh g"><span>📍 REGULIERE SCHOLEN</span></div>';
+    reg.forEach(function(k,i){h+=kindHtml(pref+(i+1),(ver?i+2:i+1),k.n,k.l,'','');});
+    return h;
+}
+
+function schLijst(){
+    var w=Object.keys(selPMs).filter(function(k){return selPMs[k];});
+    if(!w.length)w=['Sarah','Thomas','Lisa'];
+    var andA=w.filter(function(n){return n!==huidigePM;}),perPM=Math.ceil(kiLijst.length/w.length),eidx=w.indexOf(huidigePM);
+    var eigenK=kiLijst.slice(eidx*perPM,eidx*perPM+perPM);
+    var h=appB(true,24)+'<div class="st">'+dagRij(vand.getDay()-1)+chips(huidigePM)+'</div>'+spraakBalkHtml()+scrPijl()+'<div class="sa" style="padding-top:8px;">';
+    h+='<div class="ps3 eigen expanded"><div class="ps3h"><div class="cv" style="transform:rotate(90deg)">▶</div><div class="av2">'+huidigePM[0]+'</div><div class="pi2"><h3>'+huidigePM+'</h3><p>'+eigenK.length+' kinderen • 1 rit</p></div></div><div class="pb2">'+maakLijst('e',eigenK,true)+'</div></div>';
+    andA.forEach(function(n){var pidx=w.indexOf(n),kk=kiLijst.slice(pidx*perPM,pidx*perPM+perPM);var bH='<div class="shh g"><span>📍 REGULIERE SCHOLEN</span></div>';kk.forEach(function(k,i){bH+=kindHtml('pm'+n+i,i+1,k.n,k.l,'','');});bH+='<p style="font-size:10px;color:#9e9e9e;text-align:center;margin-top:4px;font-style:italic;">Readonly — alleen bekijken</p>';h+='<div class="ps3" id="ps-'+n+'"><div class="ps3h" onclick="togPM(this.parentElement)"><div class="cv">▶</div><div class="av2" style="background:#2196F3;">'+n[0]+'</div><div class="pi2"><h3>'+n+'</h3><p>'+kk.length+' kinderen</p></div></div><div class="pb2">'+bH+'</div></div>';});
+    h+=volgKnop()+'</div>';
+    return h;
+}
+window.togPM=function(el){if(!el||!el.classList)return;el.classList.toggle('expanded');var cv=el.querySelector('.cv');if(cv)cv.style.transform=el.classList.contains('expanded')?'rotate(90deg)':'';};
+
+function schAndere(){
+    var w=Object.keys(selPMs).filter(function(k){return selPMs[k];});
+    if(!w.length)w=['Sarah','Thomas','Lisa'];
+    var andA=w.filter(function(n){return n!==huidigePM;}),perPM=Math.ceil(kiLijst.length/w.length),eidx=w.indexOf(huidigePM);
+    var eigenK=kiLijst.slice(eidx*perPM,eidx*perPM+perPM);
+    var h=appB(true,24)+'<div class="st">'+dagRij(vand.getDay()-1)+chips(huidigePM)+'</div>'+spraakBalkHtml()+scrPijl()+'<div class="sa" style="padding-top:8px;">';
+    var eB='<div class="shh g"><span>📍 REGULIERE SCHOLEN</span></div>';eigenK.forEach(function(k,i){eB+=kindHtml('ea'+(i+1),i+1,k.n,k.l,'','');});
+    h+='<div class="ps3 eigen expanded"><div class="ps3h"><div class="cv" style="transform:rotate(90deg)">▶</div><div class="av2">'+huidigePM[0]+'</div><div class="pi2"><h3>'+huidigePM+'</h3><p>'+eigenK.length+' kinderen</p></div></div><div class="pb2">'+eB+'</div></div>';
+    andA.forEach(function(n){var pidx=w.indexOf(n),kk=kiLijst.slice(pidx*perPM,pidx*perPM+perPM);var bH='<div class="shh g"><span>📍 REGULIERE SCHOLEN</span></div>';kk.forEach(function(k,i){bH+=kindHtml('and'+n+i,i+1,k.n,k.l,'','');});bH+='<p style="font-size:10px;color:#9e9e9e;text-align:center;margin-top:4px;font-style:italic;">Readonly — alleen bekijken</p>';h+='<div class="ps3" id="ps-and-'+n+'"><div class="ps3h" onclick="togPM(this.parentElement)"><div class="cv">▶</div><div class="av2" style="background:#2196F3;">'+n[0]+'</div><div class="pi2"><h3>'+n+'</h3><p>'+kk.length+' kinderen</p></div></div><div class="pb2">'+bH+'</div></div>';});
+    h+=volgKnop()+'</div>';
+    return h;
+}
+
+function schSpecSchool(){
+    return appB(true,14,'#FF9800')+'<div class="st">'+dagRij(vand.getDay()-1)+chips(huidigePM)+'</div>'+spraakBalkHtml()+scrPijl()
+    +'<div class="sa" style="padding-top:8px;"><div class="ps3 eigen expanded"><div class="ps3h" style="background:#E8F5E9;border-bottom:1.5px solid #C8E6C9;"><div class="cv" style="background:#4CAF50;transform:rotate(90deg);">▶</div><div class="av2">'+huidigePM[0]+'</div><div class="pi2"><h3>'+huidigePM+'</h3><p>5 kinderen • 1 rit</p></div></div><div class="pb2">'
+    +'<div class="shh b" style="display:flex;align-items:center;justify-content:space-between;" id="ver-sh"><span>🏫 VERDEROP GELEGEN SCHOOL</span><button class="ovb" id="ov-btn" onclick="markOv()">🔄 Overstappers uitgestapt</button></div>'
+    +'<div id="ver-ki">'+kindHtml('r1',1,'Lauren v/d Dijk',9,'ver','🔄')+'</div>'
+    +'<div class="shh g"><span>📍 REGULIERE SCHOLEN</span></div>'
+    +kindHtml('r2',2,'Sytske',8)+kindHtml('r3',3,'Tycho',10)+kindHtml('r4',4,'Alexander',7)+kindHtml('r5',5,'Benthe',8)
+    +'</div></div>'+volgKnop()+'</div>';
+}
+window.markOv=function(){
+    var btn=document.getElementById('ov-btn'),sh=document.getElementById('ver-sh'),ov=document.getElementById('ver-ki');
+    if(btn)btn.style.display='none';
+    if(sh)sh.innerHTML='<span>🏫 VERDEROP GELEGEN SCHOOL</span><span class="klaarbadge">✓ Uitgestapt</span>';
+    if(ov){ov.style.opacity='0.4';ov.style.textDecoration='line-through';}
+};
+
+function schTussenstop(){
+    return appB(true,14)+'<div class="st">'+dagRij(vand.getDay()-1)+chips(huidigePM)+'</div>'+spraakBalkHtml()+scrPijl()
+    +'<div class="sa" style="padding-top:8px;"><div class="ps3 eigen expanded"><div class="ps3h" style="background:#E8F5E9;border-bottom:1.5px solid #C8E6C9;"><div class="cv" style="background:#4CAF50;transform:rotate(90deg);">▶</div><div class="av2">'+huidigePM[0]+'</div><div class="pi2"><h3>'+huidigePM+' <span style="background:#FF9800;color:white;border-radius:7px;padding:1px 6px;font-size:9px;">🔄 Tussenstop</span></h3><p>4 kinderen</p></div></div><div class="pb2">'
+    +'<div class="tb" id="tuss-b"><span style="font-size:20px;">🔄</span><div style="flex:1;"><div style="font-weight:bold;font-size:12px;color:#E65100;">LET OP: 2 kinderen naar Tussenstop</div><div style="font-size:10px;color:#757575;">Jeske, Jinte</div></div></div>'
+    +kindHtml('t1',1,'Jeske',11,'tuss')+kindHtml('t2',2,'Jinte',6,'tuss')
+    +'<div class="shh g"><span>📍 REGULIERE SCHOLEN</span></div>'
+    +kindHtml('t3',3,'Luc',8)+kindHtml('t4',4,'Mare-linde',7)
+    +'</div></div>'+volgKnop()+'</div>';
+}
+
+function schBusrit(){
+    return appB(true,7,'#FF9800')+'<div class="st">'+dagRij(vand.getDay()-1)+chips(huidigePM)+'</div>'
+    +'<div class="trb"><span style="font-size:22px;">⚠️</span><div><h4>Je hebt 2 busritten vandaag!</h4><p>Wissel via de tabs</p></div></div>'
+    +scrPijl()
+    +'<div class="sa" style="padding-top:8px;"><div class="ps3 eigen expanded"><div class="ps3h" style="background:#E8F5E9;border-bottom:1.5px solid #C8E6C9;"><div class="cv" style="background:#4CAF50;transform:rotate(90deg);">▶</div><div class="av2">'+huidigePM[0]+'</div><div class="pi2"><h3>'+huidigePM+'</h3><p>7 kinderen • 2 busritten</p></div></div>'
+    +'<div class="brt"><div class="brtab act" id="tab1" onclick="swTab(1)">🚌 Busrit 1<span class="tbd">4</span></div><div class="brtab" id="tab2" onclick="swTab(2)">🚌 Busrit 2<span class="tbd">3</span></div></div>'
+    +'<div class="brp act" id="bsp1"><div class="shh g"><span>📍 REGULIERE SCHOLEN</span></div>'+kindHtml('bus1',1,'Sytske',8)+kindHtml('bus2',2,'Tycho',10)+kindHtml('bus3',3,'Alexander',7)+kindHtml('bus4',4,'Benthe',8)+'</div>'
+    +'<div class="brp" id="bsp2"><div class="shh g"><span>📍 REGULIERE SCHOLEN</span></div>'+kindHtml('bus5',1,'Mirthe A.',7)+kindHtml('bus6',2,'Mirthe V.',5)+kindHtml('bus7',3,'Ravi',6)+'</div>'
+    +'</div>'+volgKnop()+'</div>';
+}
+window.swTab=function(nr){
+    document.getElementById('tab1').classList.toggle('act',nr===1);document.getElementById('tab2').classList.toggle('act',nr===2);
+    document.getElementById('bsp1').classList.toggle('act',nr===1);document.getElementById('bsp2').classList.toggle('act',nr===2);
+};
+
+function schWacht(){
+    return appB(true,14)+'<div class="st">'+dagRij(vand.getDay()-1)+chips(huidigePM)+'</div>'
+    +'<div class="wb wacht" id="wb-el"><div style="font-size:26px;flex-shrink:0;" id="wb-ic">⏳</div><div><h4 id="wb-t">⏳ Wacht op Busje Rit 2</h4><p id="wb-p">Wacht op melding dat busje vertrokken is</p></div></div>'
+    +'<div class="sa"><div class="ps3 eigen expanded"><div class="ps3h" style="background:#E8F5E9;border-bottom:1.5px solid #C8E6C9;"><div class="cv" style="background:#4CAF50;transform:rotate(90deg);">▶</div><div class="av2">'+huidigePM[0]+'</div><div class="pi2"><h3>'+huidigePM+' — Stint 1</h3><p>3 kinderen al opgehaald ✓</p></div></div>'
+    +'<div class="pb2"><div class="shh g"><span>📍 REGULIERE SCHOLEN</span></div>'
+    +'<div class="kind af" id="k-w1-af"><div style="display:flex;align-items:center;gap:12px;padding:11px 12px;"><div class="cb3" style="background:#4CAF50;border-color:#4CAF50;"><div class="cbc" style="display:block;">✓</div></div><div class="nr" style="background:#9E9E9E;">1</div><div style="flex:1;min-width:0;"><div class="nm">Alexander</div><div class="dt">7 jaar</div></div></div></div>'+'<div class="kind af" id="k-w2-af"><div style="display:flex;align-items:center;gap:12px;padding:11px 12px;"><div class="cb3" style="background:#4CAF50;border-color:#4CAF50;"><div class="cbc" style="display:block;">✓</div></div><div class="nr" style="background:#9E9E9E;">2</div><div style="flex:1;min-width:0;"><div class="nm">Benthe</div><div class="dt">8 jaar</div></div></div></div>'+'<div class="kind af" id="k-w3-af"><div style="display:flex;align-items:center;gap:12px;padding:11px 12px;"><div class="cb3" style="background:#4CAF50;border-color:#4CAF50;"><div class="cbc" style="display:block;">✓</div></div><div class="nr" style="background:#9E9E9E;">3</div><div style="flex:1;min-width:0;"><div class="nm">Carlijn</div><div class="dt">6 jaar</div></div></div></div>'+'</div></div>'
+    +'<div style="padding:0 9px 9px;"><button onclick="simBus()" id="sim-btn" style="width:100%;padding:11px;background:linear-gradient(135deg,#FF9800,#F57C00);color:white;border:none;border-radius:10px;font-size:12px;font-weight:bold;cursor:pointer;font-family:inherit;">🚌 Simuleer: Thomas vinkt laatste kind af (Rit 2)</button></div>'    +'<div id="wacht-next" style="display:none;padding:0 9px 4px;"><button onclick="next()" style="width:100%;padding:12px;background:linear-gradient(135deg,#4CAF50,#388E3C);color:white;border:none;border-radius:11px;font-size:13px;font-weight:bold;cursor:pointer;font-family:inherit;">Volgende →</button></div>'    +'</div>';
+}
+window.simBus=function(){
+    var b=document.getElementById('wb-el');if(!b)return;
+    b.className='wb vert';
+    document.getElementById('wb-ic').textContent='✅';
+    document.getElementById('wb-t').textContent='✅ Busje is vertrokken!';
+    document.getElementById('wb-p').textContent='Je kunt nu vertrekken met je groep!';
+    var sb=document.getElementById('sim-btn');if(sb)sb.style.display='none';
+    var wn=document.getElementById('wacht-next');if(wn)wn.style.display='block';
+};
+
+function schExtra(){
+    return appB(true,16)+'<div class="st">'+dagRij(vand.getDay()-1)+chips(huidigePM)+'</div>'+spraakBalkHtml()+scrPijl()
+    +'<div class="sa" style="padding-top:8px;">'
+    +'<div class="es fietsen"><div class="eh" onclick="togEx(\'fiets\')"><div class="cv" style="background:#81C784;">▶</div><div class="ei">🚴</div><div><div style="font-size:11px;font-weight:bold;margin-bottom:1px;">Fietst mee met Stint</div><div id="fi-t" style="font-size:10px;color:#757575;">2 kinderen • 0/2 aangekomen</div></div></div><div class="extra-body hidden" id="fi-b"><div class="ek" id="ef1" onclick="togEK(\'ef1\',\'fi-t\',2)"><div class="ebc"></div><div style="flex:1;"><div style="font-size:11px;font-weight:bold;">Fleur</div><div style="font-size:10px;color:#757575;">8 jaar</div></div></div><div class="ek" id="ef2" onclick="togEK(\'ef2\',\'fi-t\',2)"><div class="ebc"></div><div style="flex:1;"><div style="font-size:11px;font-weight:bold;">Pim</div><div style="font-size:10px;color:#757575;">7 jaar</div></div></div></div></div>'
+    +'<div class="es zelfstandig"><div class="eh" onclick="togEx(\'zelf\')"><div class="cv" style="background:#64B5F6;">▶</div><div class="ei">🚶</div><div><div style="font-size:11px;font-weight:bold;margin-bottom:1px;">Zelfstandig naar BSO</div><div id="ze-t" style="font-size:10px;color:#757575;">2 kinderen • 0/2 aangekomen</div></div></div><div class="extra-body hidden" id="ze-b"><div class="ek" id="ez1" onclick="togEK(\'ez1\',\'ze-t\',2)"><div class="ebc"></div><div style="flex:1;"><div style="font-size:11px;font-weight:bold;">Lena</div><div style="font-size:10px;color:#757575;">9 jaar</div></div></div><div class="ek" id="ez2" onclick="togEK(\'ez2\',\'ze-t\',2)"><div class="ebc"></div><div style="flex:1;"><div style="font-size:11px;font-weight:bold;">Roos</div><div style="font-size:10px;color:#757575;">8 jaar</div></div></div></div></div>'
+    +'<div class="es talint"><div class="eh" onclick="togEx(\'talint\')"><div class="cv" style="background:#9C27B0;">▶</div><div class="ei">🎓</div><div><div style="font-size:11px;font-weight:bold;margin-bottom:1px;">Naschools programma</div><div id="ta-t" style="font-size:10px;color:#757575;">2 kinderen • 0/2 aangekomen</div></div></div><div class="extra-body hidden" id="ta-b"><div class="ek" id="et1" onclick="togEK(\'et1\',\'ta-t\',2)"><div class="ebc"></div><div style="flex:1;"><div style="font-size:11px;font-weight:bold;">Jade</div><div style="font-size:10px;color:#757575;">8 jaar</div></div></div><div class="ek" id="et2" onclick="togEK(\'et2\',\'ta-t\',2)"><div class="ebc"></div><div style="flex:1;"><div style="font-size:11px;font-weight:bold;">Max</div><div style="font-size:10px;color:#757575;">7 jaar</div></div></div></div></div>'
+    +volgKnop()+'</div>';
+}
+window.togEx=function(t){var m={fiets:'fi-b',zelf:'ze-b',talint:'ta-b'};var b=document.getElementById(m[t]);if(b)b.classList.toggle('hidden');};
+window.togEK=function(id,tid,tot){
+    var el=document.getElementById(id);if(!el)return;
+    var af=el.classList.toggle('af');
+    var cb=el.querySelector('.ebc');
+    if(af){cb.style.background='#4CAF50';cb.style.borderColor='#4CAF50';cb.innerHTML='<span style="color:white;font-size:11px;font-weight:bold;">✓</span>';var b=document.createElement('div');b.className='okb';b.textContent='✓ Aangekomen';el.appendChild(b);}
+    else{cb.style.background='';cb.style.borderColor='';cb.innerHTML='';var b2=el.querySelector('.okb');if(b2)el.removeChild(b2);}
+    var sec=el.closest('.es');if(sec){var alle=sec.querySelectorAll('.ek').length,afC=sec.querySelectorAll('.ek.af').length;var t=document.getElementById(tid);if(t)t.textContent=alle+' kinderen • '+afC+'/'+alle+' aangekomen';}
+};
+
+function schAfvinken(){
+    var ks=[{id:'a1',nr:1,n:'Lauren v/d Dijk',l:9,t:'ver'},{id:'a2',nr:2,n:'Alexander',l:7},{id:'a3',nr:3,n:'Benthe',l:8},{id:'a4',nr:4,n:'Carlijn',l:6},{id:'a5',nr:5,n:'Figo',l:7}];
+    var af=ks.filter(function(k){return kindStatus[k.id];}).length,alleAf=af===ks.length;
+    return appB(true,14)+'<div class="st">'+dagRij(vand.getDay()-1)+chips(huidigePM)+'</div>'+spraakBalkHtml()+scrPijl()
+    +'<div class="sa" style="padding-top:8px;"><div class="ps3 eigen expanded"><div class="ps3h" style="background:#E8F5E9;border-bottom:1.5px solid #C8E6C9;"><div class="cv" style="background:#4CAF50;transform:rotate(90deg);">▶</div><div class="av2">'+huidigePM[0]+'</div><div class="pi2"><h3>'+huidigePM+'</h3><p>5 kinderen • 1 rit</p></div></div><div class="pb2">'
+    +'<div class="shh b"><span>🏫 VERDEROP GELEGEN SCHOOL</span></div>'
+    +ks.filter(function(k){return k.t==='ver';}).map(function(k){return kindHtml(k.id,k.nr,k.n,k.l,k.t,'');}).join('')
+    +'<div class="shh g"><span>📍 REGULIERE SCHOLEN</span></div>'
+    +ks.filter(function(k){return k.t!=='ver';}).map(function(k){return kindHtml(k.id,k.nr,k.n,k.l,'','');}).join('')
+    +'<div style="margin-top:10px;padding-top:10px;border-top:1.5px solid #E0E0E0;">'
+    +(alleAf?'':'<button class="vb" id="vink-b" onclick="vinkAlles()"><span style="font-size:18px;">✓</span><span>Vink Alle Kinderen Af ('+af+'/5)</span></button>')
+    +'<div id="klaar-d" class="'+(alleAf?'':'hidden')+'"><button class="kb" onclick="next()"><span style="font-size:18px;">✅</span><span>Klaar! Volgende →</span></button></div>'
+    +'</div>'
+    
+    +'</div></div></div></div>';
+}
+window.vinkAlles=function(){
+    ['a1','a2','a3','a4','a5'].forEach(function(id){kindStatus[id]=true;var el=document.getElementById('k-'+id);if(el)el.classList.add('af');});
+    var btn=document.getElementById('vink-b');if(btn)btn.style.display='none';
+    var kd=document.getElementById('klaar-d');if(kd)kd.classList.remove('hidden');
+};
+
+function schBedankt(){
+    return '<div class="db">🔵 DEMO · Logilink BSO Ophaalapp</div>'
+    +'<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px 20px;min-height:540px;background:linear-gradient(160deg,#E3F2FD,#BBDEFB 60%,#E3F2FD);">'
+    +'<svg width="60" height="60" viewBox="0 0 24 24" fill="#2196F3" style="display:block;margin:0 auto 12px;"><path d="M17 5H3C1.9 5 1 5.9 1 7v9h2c0 1.1.9 2 2 2s2-.9 2-2h6c0 1.1.9 2 2 2s2-.9 2-2h2v-4l-3-5zM5 17c-.55 0-1-.45-1-1s.45-1 1-1 1 .45 1 1-.45 1-1 1zm11 0c-.55 0-1-.45-1-1s.45-1 1-1 1 .45 1 1-.45 1-1 1zm-1-5H3V7h12v5z"/><path d="M20 7h-1v8h3V9l-2-2z" fill="#1565C0"/></svg>'
+    +'<div style="font-size:26px;font-weight:900;background:linear-gradient(135deg,#2196F3,#1565C0);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:4px;">Logilink BSO</div>'
+    +'<div style="font-size:14px;font-weight:600;color:#1976D2;margin-bottom:20px;">Ophaalplanning</div>'
+    +'<div style="font-size:20px;font-weight:800;color:#1a2a3a;text-align:center;margin-bottom:20px;">👋 Bedankt voor het bekijken!</div>'
+    +'<div style="background:white;border-radius:14px;padding:16px 18px;width:100%;box-shadow:0 4px 16px rgba(33,150,243,0.12);border:1.5px solid #E3F2FD;margin-bottom:12px;"><div style="font-size:11px;color:#757575;margin-bottom:4px;">Ontwikkeld door</div><div style="font-size:15px;font-weight:700;color:#1565C0;">BrAIn Apps</div><div style="font-size:12px;color:#757575;">Martijn van den Brakel · Boornbergum</div></div>'
+    +'<div style="background:white;border-radius:14px;padding:14px 16px;width:100%;box-shadow:0 4px 16px rgba(33,150,243,0.12);border:1.5px solid #E3F2FD;margin-bottom:14px;"><div style="font-size:12px;font-weight:700;color:#1565C0;margin-bottom:6px;">💡 Interesse in een persoonlijke demo?</div><div style="font-size:11px;color:#475569;line-height:1.6;">We komen graag langs bij uw BSO om de app te laten zien en te bekijken hoe deze past binnen uw werkwijze.</div></div>'
+    +'<div style="font-size:10px;color:#BDBDBD;text-align:center;">© 2026 BrAIn Apps · Alle rechten voorbehouden</div></div>';
+}
+
+// NAVIGATIE
+function render(){
+    var s=STAPPEN[stap];
+    if(s.s==='datum'){window._dagdeel='BSO';window._selDag=undefined;}
+    if(s.s==='aanwezig')delKind={};
+    if(s.s==='pmsel')selPMs={'Sarah':true,'Thomas':true,'Lisa':true};
+    if(s.s==='lijst'||s.s==='andere'){huidigePM='Sarah';selPMs={'Sarah':true,'Thomas':true,'Lisa':true};}
+    if(s.s==='planning')planPMs={stint1:null,stint2:null,busje1:null};
+
+    // iOS ID's
+    var elIc=document.getElementById('stap-ic')||document.getElementById('sic');
+    var elTit=document.getElementById('stap-titel')||document.getElementById('sti');
+    var elDesc=document.getElementById('stap-desc')||document.getElementById('std');
+    var elBadge=document.getElementById('stap-badge')||document.getElementById('stepBadge');
+    var elProg=document.getElementById('prog-fill')||document.getElementById('pf');
+    var elPrev=document.getElementById('btn-prev')||document.getElementById('prevBtn');
+    var elNext=document.getElementById('btn-next')||document.getElementById('nextBtn');
+
+    if(elIc) elIc.textContent=s.ic;
+    if(elTit) elTit.textContent=s.t;
+    if(elDesc) elDesc.textContent=s.d;
+    if(elBadge) elBadge.textContent=(stap+1)+' / '+STAPPEN.length;
+    if(elProg) elProg.style.width=((stap+1)/STAPPEN.length*100).toFixed(0)+'%';
+    document.getElementById('dots').innerHTML=STAPPEN.map(function(_,i){return '<div class="dot'+(i===stap?' active':(i<stap?' done':''))+'" onclick="gaNaar('+i+')"></div>';}).join('');
+    if(elPrev) elPrev.disabled=stap===0;
+    if(elNext) elNext.textContent=stap===STAPPEN.length-1?'🎉 Einde':'Volgende →';
+
+    var sc=document.getElementById('scr');
+    try{sc.innerHTML=scherm(s.s);}catch(e){sc.innerHTML='<div style="padding:16px;color:red;font-size:11px;font-family:monospace;"><b>Fout:</b><br>'+e.message+'</div>';}
+    sc.classList.remove('fade-in');void sc.offsetWidth;sc.classList.add('fade-in');
+    sc.scrollTop=0;
+}
+
+function next(){if(stap<STAPPEN.length-1){stap++;render();}else{alert('🎉 Einde van de demo!\n\nBedankt voor het bekijken.\n\nBrAIn Apps · Martijn van den Brakel\n© 2026');}}
+function prev(){if(stap>0){stap--;render();}}
+window.gaNaar=function(i){stap=i;render();};
+
+window.belCoord=function(){alert('Demo: Bellen naar BSO Coördinator\n06-12345678\n\nIn de echte app wordt dit telefoonnummer gebeld.');};
+window.belAlarm=function(){alert('Demo: Bellen naar Alarmcentrale\n\nIn de echte app staat hier het echte noodcontactnummer.');};
+
+// ============================================================
+// SPRAAK AFVINK - nagebouwd naar Flutter SpraakAfvinkMixin
+// ============================================================
+var _spraakAan = false;
+var _spraakMatch = false;
+var _spraakStatus = '';
+var _spraakTimer = null;
+var _spraakRecognition = null;
+var _spraakBeschikbaar = ('SpeechRecognition' in window || 'webkitSpeechRecognition' in window);
+
+function spraakBalkHtml(){
+    var staat = _spraakMatch ? 'match' : (_spraakAan ? 'aan' : 'uit');
+    var micIcon = _spraakMatch
+        ? '<svg width="22" height="22" viewBox="0 0 24 24" fill="white"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>'
+        : (_spraakAan
+            ? '<svg width="22" height="22" viewBox="0 0 24 24" fill="white"><path d="M12 14c1.66 0 2.99-1.34 2.99-3L15 5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3zm5.3-3c0 3-2.54 5.1-5.3 5.1S6.7 14 6.7 11H5c0 3.41 2.72 6.23 6 6.72V21h2v-3.28c3.28-.48 6-3.3 6-6.72h-1.7z"/></svg>'
+            : '<svg width="22" height="22" viewBox="0 0 24 24" fill="white"><path d="M19 11h-1.7c0 .74-.16 1.43-.43 2.05l1.23 1.23c.56-.98.9-2.09.9-3.28zm-4.02.17c0-.06.02-.11.02-.17V5c0-1.66-1.34-3-3-3S9 3.34 9 5v.18l5.98 5.99zM4.27 3L3 4.27l6.01 6.01V11c0 1.66 1.33 3 2.99 3 .22 0 .44-.03.65-.08l1.66 1.66c-.71.33-1.5.52-2.31.52-2.76 0-5.3-2.1-5.3-5.1H5c0 3.41 2.72 6.23 6 6.72V21h2v-3.28c.91-.13 1.77-.45 2.54-.9L19.73 21 21 19.73 4.27 3z"/></svg>');
+    var hoofdTekst = _spraakMatch ? _spraakStatus
+        : (_spraakAan ? 'Zeg een kindernaam...' : 'Spraakherkenning uit — tik om aan te zetten');
+    var subTekst = _spraakMatch ? '✓ Afgevinkt via spraak!'
+        : (_spraakAan ? (_spraakStatus || 'Luistert...') : 'Tik op de microfoon');
+    var kleurTekst = _spraakMatch ? '#2E7D32' : (_spraakAan ? '#C62828' : '#757575');
+    var subKleur = _spraakMatch ? '#4CAF50' : (_spraakAan ? '#E53935' : '#9E9E9E');
+    return '<div class="spraak-balk '+staat+'" onclick="toggleSpraak()" style="padding:10px 14px;display:flex;align-items:center;gap:12px;">'
+        +'<div class="spraak-mic">'+micIcon+'</div>'
+        +'<div style="flex:1;">'
+        +'<div style="font-size:13px;font-weight:600;color:'+kleurTekst+';">'+hoofdTekst+'</div>'
+        +'<div style="font-size:11px;color:'+subKleur+';margin-top:1px;">'+subTekst+'</div>'
+        +'</div>'
+        +(_spraakBeschikbaar ? '' : '<div style="font-size:10px;color:#BDBDBD;background:#F5F5F5;border-radius:8px;padding:3px 8px;">Browser ondersteunt geen spraak</div>')
+        +'</div>';
+}
+
+function spraakBalkVernieuwen(){
+    var balken = document.querySelectorAll('.spraak-balk');
+    balken.forEach(function(b){
+        var parent = b.parentNode;
+        var div = document.createElement('div');
+        div.innerHTML = spraakBalkHtml();
+        parent.replaceChild(div.firstChild, b);
+    });
+}
+
+window.toggleSpraak = function(){
+    if (!_spraakBeschikbaar) {
+        // Demo simulatie als browser geen speech heeft
+        simuleerSpraakDemo();
+        return;
+    }
+    if (_spraakAan) {
+        stopSpraak();
+    } else {
+        startSpraak();
+    }
+};
+
+function startSpraak(){
+    var SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SR) { simuleerSpraakDemo(); return; }
+    _spraakRecognition = new SR();
+    _spraakRecognition.lang = 'nl-NL';
+    _spraakRecognition.continuous = true;
+    _spraakRecognition.interimResults = true;
+    _spraakRecognition.onstart = function(){ _spraakAan=true; _spraakMatch=false; _spraakStatus=''; spraakBalkVernieuwen(); };
+    _spraakRecognition.onresult = function(e){
+        var tekst = '';
+        for (var i=e.resultIndex;i<e.results.length;i++) tekst += e.results[i][0].transcript;
+        _spraakStatus = tekst;
+        spraakBalkVernieuwen();
+        // Check of kindernaam herkend
+        var kinderen = document.querySelectorAll('.ki .nm');
+        kinderen.forEach(function(el){
+            var naam = el.textContent.replace('🏫','').replace('🔄','').trim().toLowerCase();
+            if (tekst.toLowerCase().includes(naam) && naam.length > 2) {
+                var kindEl = el.closest('.kind');
+                if (kindEl && !kindEl.classList.contains('af')) {
+                    var id = kindEl.id.replace('k-','');
+                    _spraakMatch = true;
+                    _spraakStatus = '✓ '+el.textContent.trim()+' herkend!';
+                    stopSpraak();
+                    togKind(id);
+                    spraakBalkVernieuwen();
+                    setTimeout(function(){ _spraakMatch=false; _spraakStatus=''; spraakBalkVernieuwen(); }, 2500);
+                }
+            }
+        });
+    };
+    _spraakRecognition.onerror = function(){ _spraakAan=false; spraakBalkVernieuwen(); };
+    _spraakRecognition.onend = function(){ _spraakAan=false; spraakBalkVernieuwen(); };
+    try { _spraakRecognition.start(); } catch(e) { _spraakAan=false; }
+}
+
+function stopSpraak(){
+    _spraakAan=false;
+    if (_spraakRecognition) { try { _spraakRecognition.stop(); } catch(e){} }
+    spraakBalkVernieuwen();
+}
+
+// Demo simulatie voor browsers zonder speech (laat zien hoe het werkt)
+var _demoStap = 0;
+function simuleerSpraakDemo(){
+    if (_spraakAan) { _spraakAan=false; _spraakStatus=''; spraakBalkVernieuwen(); return; }
+    _spraakAan=true; _spraakStatus='Luistert...'; _spraakMatch=false;
+    spraakBalkVernieuwen();
+    // Demo: type letter voor letter een naam
+    var kinderen = document.querySelectorAll('.kind:not(.af) .ki .nm');
+    if (kinderen.length === 0) { _spraakAan=false; spraakBalkVernieuwen(); return; }
+    var doelNaam = kinderen[_demoStap % kinderen.length].textContent.replace('🏫','').replace('🔄','').trim();
+    _demoStap++;
+    var i=0;
+    _spraakTimer = setInterval(function(){
+        i++;
+        _spraakStatus = doelNaam.substring(0,i)+'...';
+        spraakBalkVernieuwen();
+        if (i >= doelNaam.length) {
+            clearInterval(_spraakTimer);
+            _spraakMatch = true;
+            _spraakStatus = '✓ '+doelNaam+' herkend!';
+            _spraakAan = false;
+            spraakBalkVernieuwen();
+            // Vink het kind af
+            var kindEl = document.querySelectorAll('.kind:not(.af) .ki .nm')[0];
+            if (kindEl) {
+                var id = kindEl.closest('.kind').id.replace('k-','');
+                togKind(id);
+            }
+            setTimeout(function(){ _spraakMatch=false; _spraakStatus=''; spraakBalkVernieuwen(); }, 2500);
+        }
+    }, 120);
+}
+
+
+
+
+// ── OFFLINE INDICATOR ──────────────────────────────────────
+function toonOfflineBanner(){
+    if(document.getElementById('offline-banner')) return;
+    var b=document.createElement('div');
+    b.id='offline-banner';
+    b.style.cssText='position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:9999;background:#E53935;color:white;padding:10px 20px;border-radius:0 0 14px 14px;font-size:13px;font-weight:bold;display:flex;align-items:center;gap:8px;box-shadow:0 4px 16px rgba(0,0,0,0.3);max-width:430px;width:100%;justify-content:center;';
+    b.innerHTML='<svg width="16" height="16" viewBox="0 0 24 24" fill="white"><path d="M1 1l22 22M16.72 11.06A10.94 10.94 0 0 1 19 12.55M5 12.55a10.94 10.94 0 0 1 5.17-2.39M10.71 5.05A16 16 0 0 1 22.56 9M1.42 9a15.91 15.91 0 0 1 4.7-2.88M8.53 16.11a6 6 0 0 1 6.95 0M12 20h.01" stroke="white" stroke-width="2" stroke-linecap="round"/></svg> Geen internetverbinding — app werkt offline verder';
+    document.body.appendChild(b);
+}
+function verbergOfflineBanner(){
+    var b=document.getElementById('offline-banner');
+    if(b){
+        b.style.background='#4CAF50';
+        b.innerHTML='<svg width="16" height="16" viewBox="0 0 24 24" fill="white"><path d="M5 12l5 5L20 7" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg> Verbinding hersteld';
+        setTimeout(function(){if(b&&b.parentNode)b.parentNode.removeChild(b);},2500);
+    }
+}
+window.addEventListener('offline', toonOfflineBanner);
+window.addEventListener('online', verbergOfflineBanner);
+// Check bij laden
+if(!navigator.onLine) toonOfflineBanner();
+window.simOffline=function(){
+    toonOfflineBanner();
+    setTimeout(function(){verbergOfflineBanner();},4000);
+};
+
+window.simOffline=function(){
+    toonOfflineBanner();
+    setTimeout(function(){verbergOfflineBanner();},4000);
+};
+
+
+</script>
+</body>
+</html>
