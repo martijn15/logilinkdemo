@@ -512,8 +512,8 @@ function chkVink(){
     if(af===5){btn.style.display='none';var kd=document.getElementById('klaar-d');if(kd)kd.classList.remove('hidden');}
 }
 
-function pijl(){return '';} // iOS: geen klik-hints nodig
-function scrPijl(){return '';} // iOS: swipe vanzelf
+function pijl(){return '<div style="text-align:center;padding:4px 0 2px;"><svg width="28" height="32" viewBox="0 0 40 44"><polyline points="4,2 20,14 36,2" fill="none" stroke="#E8C13A" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" style="animation:ch1 1s ease-in-out infinite;"/><polyline points="4,16 20,28 36,16" fill="none" stroke="#E8C13A" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" style="animation:ch2 1s ease-in-out infinite;"/><polyline points="4,30 20,42 36,30" fill="none" stroke="#E8C13A" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" style="animation:ch3 1s ease-in-out infinite;"/></svg></div><div style="text-align:center;font-size:10px;font-weight:700;color:#E8C13A;margin-bottom:3px;">↑ klik hier</div>';}
+function scrPijl(){return '<div style="text-align:right;padding:2px 12px 4px;"><span style="font-size:12px;color:#E53935;font-weight:bold;animation:scrollpulse 1.2s ease-in-out infinite;display:inline-flex;flex-direction:column;align-items:center;"><span style="font-size:10px;">scroll</span><span style="font-size:15px;line-height:1;">↓</span></span></div>';}
 function volgKnop(){return '';} // iOS: navigatie via bottom nav bar
 
 // SCHERMEN
