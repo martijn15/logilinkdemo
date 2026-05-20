@@ -314,6 +314,44 @@ html,body{height:100%;overflow:hidden;background:#4CAF50;font-family:-apple-syst
   box-shadow:0 1px 4px rgba(0,0,0,0.07)}
 .beheer-item:active{background:#F5F5F5}
 .beheer-icon{width:52px;height:52px;border-radius:13px;display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0}
+/* ── GUIDED TOUR ─────────────────────────────── */
+#tour-overlay{position:absolute;top:0;left:0;right:0;bottom:0;z-index:100;pointer-events:none;overflow:hidden}
+#tour-overlay.actief{pointer-events:all}
+#tour-svg{position:absolute;top:0;left:0;pointer-events:none}
+#tour-tip{position:absolute;left:8px;right:8px;background:white;border-radius:14px;
+  padding:14px 16px;box-shadow:0 8px 32px rgba(0,0,0,0.25);pointer-events:all;
+  border:1.5px solid #4CAF50;z-index:101}
+#tour-tip h4{font-size:14px;font-weight:bold;color:#1B5E20;margin:0 0 6px}
+#tour-tip p{font-size:12px;color:#424242;line-height:1.6;margin:0 0 12px}
+.tour-nav{display:flex;justify-content:space-between;align-items:center}
+.tour-stap{font-size:11px;color:#9E9E9E}
+.tour-btns{display:flex;gap:6px}
+.tour-btn{padding:6px 14px;border-radius:20px;font-size:12px;font-weight:600;
+  cursor:pointer;font-family:inherit;border:1.5px solid #4CAF50;color:#4CAF50;background:white}
+.tour-btn.primary{background:#4CAF50;color:white;border-color:#4CAF50}
+.tour-btn.skip{border-color:#E0E0E0;color:#9E9E9E}
+.tour-pulse{animation:tour-pulse 1.5s ease-in-out infinite}
+@keyframes tour-pulse{0%,100%{box-shadow:0 0 0 0 rgba(76,175,80,0.4)}50%{box-shadow:0 0 0 8px rgba(76,175,80,0)}}
+
+/* ── GUIDED TOUR v2 ──────────────────────────── */
+#tour-wrap{display:none;position:absolute;inset:0;z-index:200}
+#tour-wrap.aan{display:block}
+#tour-dim{position:absolute;inset:0;background:rgba(0,0,0,0.55)}
+#tour-spot{position:absolute;border:2.5px solid #4CAF50;border-radius:10px;
+  box-shadow:0 0 0 9999px rgba(0,0,0,0.55);pointer-events:none;transition:all 0.3s ease;z-index:201}
+#tour-card{position:absolute;left:8px;right:8px;background:white;border-radius:16px;
+  padding:16px;box-shadow:0 8px 32px rgba(0,0,0,0.3);z-index:202;
+  border-top:3px solid #4CAF50}
+#tour-card h4{font-size:14px;font-weight:bold;color:#1B5E20;margin:0 0 6px}
+#tour-card p{font-size:12px;color:#424242;line-height:1.6;margin:0 0 12px}
+.tnav{display:flex;justify-content:space-between;align-items:center}
+.tstap{font-size:11px;color:#9E9E9E}
+.tbtns{display:flex;gap:6px}
+.tbtn{padding:7px 13px;border-radius:20px;font-size:12px;font-weight:600;
+  cursor:pointer;font-family:inherit;border:1.5px solid #4CAF50;color:#4CAF50;background:white}
+.tbtn.pr{background:#4CAF50;color:white}
+.tbtn.sk{border-color:#E0E0E0;color:#9E9E9E}
+
 </style>
 </head>
 <body>
@@ -348,7 +386,7 @@ html,body{height:100%;overflow:hidden;background:#4CAF50;font-family:-apple-syst
     <div id="stap-badge">1 / 18</div>
   </div>
   <div id="dots"></div>
-  <div id="scr"></div>
+  <div style="position:relative;flex:1;overflow:hidden;display:flex;flex-direction:column;"><div id="scr" style="flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;"></div><div id="tour-wrap" style="position:absolute;inset:0;z-index:200;display:none;"><div id="tour-dim" onclick="tourSluiten()" style="position:absolute;inset:0;background:rgba(0,0,0,0.6);"></div><div id="tour-spot" style="position:absolute;border:2.5px solid #4CAF50;border-radius:10px;box-shadow:0 0 0 9999px rgba(0,0,0,0.6);pointer-events:none;transition:all 0.3s;z-index:201;"></div><div id="tour-card" style="position:absolute;left:8px;right:8px;background:white;border-radius:16px;padding:16px;box-shadow:0 8px 32px rgba(0,0,0,0.3);z-index:202;border-top:3px solid #4CAF50;"></div></div></div>
   <div id="nav-bar">
     <button id="btn-prev" onclick="prev()" disabled>← Vorige</button>
     <button id="btn-next" onclick="next()">Volgende →</button>
@@ -403,6 +441,8 @@ var STAPPEN=[
     {ic:'📅',t:'PMs toewijzen aan vervoer',d:'Stap 1: wijs PMs toe aan vervoersmiddelen. Klik op een vervoer om een PM te kiezen!',s:'planning'},
     {ic:'🔀',t:'Automatisch verdelen',d:'Eén druk op de knop — alle kinderen automatisch verdeeld over de vervoersmiddelen.',s:'verdelen'},
     {ic:'🔐',t:'PM Ophaallijst — Inloggen',d:'Nu de PM-kant. Klik op Inloggen!',s:'auth'},
+    {ic:'🔢',t:'PIN-code',d:'Na het selecteren van je naam voer je je persoonlijke 4-cijferige PIN in.',s:'pin'},
+    {ic:'🔐',t:'2-staps verificatie',d:'Na je PIN voer je een 6-cijferige code in uit Google Authenticator.',s:'totp'},
     {ic:'📋',t:'AVG & Privacyverklaring',d:'Bij het eerste gebruik toont de app de privacyverklaring. Klik op Akkoord om verder te gaan.',s:'avg'},
     {ic:'👤',t:'Kies je naam',d:'Elke PM kiest zijn eigen naam en ziet direct zijn persoonlijke lijst. Klik op een naam!',s:'pmkies'},
     {ic:'📅',t:'Dagknoppen & eigen lijst',d:'Bovenaan zie je de spraakbalk — tik erop en zeg een kindernaam om hem af te vinken! Per kind ook WhatsApp/Bel knoppen.',s:'lijst'},
@@ -534,6 +574,8 @@ function scherm(s){
     case 'verdelen': return schVerdelen();
     case 'auth': return schAuth();
         case 'avg': return schAVG();
+        case 'pin': return schPIN();
+        case 'totp': return schTOTP();
     case 'pmkies': return schPMKies();
     case 'lijst': return schLijst();
     case 'andere': return schAndere();
@@ -564,12 +606,19 @@ function schHome(){
 function schDatum(){
     var sel=window._dagdeel||'BSO',selD=window._selDag!==undefined?window._selDag:(vand.getDay()===0?4:vand.getDay()-1);
     var dagKn='';
-    for(var i=0;i<5;i++){var d2=new Date(ma);d2.setDate(ma.getDate()+i);var isV=d2.toDateString()===vand.toDateString(),isS=i===selD;var bg=isV?'#4CAF50':(isS?'#2196F3':'white'),bdr=isV?'#4CAF50':(isS?'#2196F3':'#2196F3'),txt=isV||isS?'white':'#2196F3';dagKn+='<div onclick="selDatum('+i+')" style="background:'+bg+';border:2px solid '+bdr+';border-radius:10px;padding:8px 4px;text-align:center;cursor:pointer;"><div style="font-size:10px;font-weight:bold;color:'+txt+';">'+dg[i]+'</div><div style="font-size:18px;font-weight:bold;color:'+txt+';">'+d2.getDate()+'</div></div>';}
+    for(var i=0;i<5;i++){var d2=new Date(ma);d2.setDate(ma.getDate()+i);var isV=d2.toDateString()===vand.toDateString(),isS=i===selD;var bg=isV?'#4CAF50':(isS?'#2196F3':'white'),bdr=isV?'#4CAF50':(isS?'#2196F3':'#2196F3'),txt=isV||isS?'white':'#2196F3';if(isV){
+            dagKn+='<div style="display:flex;flex-direction:column;align-items:center;">'
+                +'<div style="text-align:center;"><svg width="18" height="20" viewBox="0 0 40 44"><polyline points="4,2 20,14 36,2" fill="none" stroke="#E8C13A" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" style="animation:ch1 1s ease-in-out infinite;"/><polyline points="4,16 20,28 36,16" fill="none" stroke="#E8C13A" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" style="animation:ch2 1s ease-in-out infinite;"/><polyline points="4,30 20,42 36,30" fill="none" stroke="#E8C13A" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" style="animation:ch3 1s ease-in-out infinite;"/></svg></div>'
+                +'<div onclick="selDatum('+i+')" style="background:'+bg+';border:2px solid '+bdr+';border-radius:10px;padding:8px 4px;text-align:center;cursor:pointer;width:100%;"><div style="font-size:10px;font-weight:bold;color:'+txt+';">'+dg[i]+'</div><div style="font-size:18px;font-weight:bold;color:'+txt+';">'+d2.getDate()+'</div></div>'
+                +'</div>';
+        } else {
+            dagKn+='<div onclick="selDatum('+i+')" style="background:'+bg+';border:2px solid '+bdr+';border-radius:10px;padding:8px 4px;text-align:center;cursor:pointer;"><div style="font-size:10px;font-weight:bold;color:'+txt+';">'+dg[i]+'</div><div style="font-size:18px;font-weight:bold;color:'+txt+';">'+d2.getDate()+'</div></div>';
+        }}
     var h='<div class="db">🔵 DEMO · Logilink BSO Ophaalapp</div><div class="ab" style="background:#1565C0;"><div class="bb" onclick="prev()">←</div><h1>📅 Dagplanning — Datum</h1></div>';
     h+='<div style="overflow-y:auto;max-height:510px;padding:12px;">';
     h+='<div style="background:white;border:2px solid #2196F3;border-radius:14px;padding:14px;margin-bottom:16px;"><div style="font-size:14px;font-weight:bold;margin-bottom:12px;">⏰ Dagdeel Selectie</div><div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">';
     h+='<div onclick="selDagdeel(\'VSO\')" style="background:'+(sel==='VSO'?'#E8F5E9':'#F5F5F5')+';border:'+(sel==='VSO'?'2px solid #4CAF50':'1.5px solid #E0E0E0')+';border-radius:10px;padding:14px;text-align:center;cursor:pointer;"><div style="font-size:16px;font-weight:bold;color:'+(sel==='VSO'?'#2E7D32':'#9E9E9E')+';">VSO</div><div style="font-size:11px;color:'+(sel==='VSO'?'#2E7D32':'#9E9E9E')+';margin-top:4px;">07:00 - 08:30</div></div>';
-    h+='<div onclick="selDagdeel(\'BSO\')" style="background:'+(sel==='BSO'?'#E8F5E9':'#F5F5F5')+';border:'+(sel==='BSO'?'2px solid #4CAF50':'1.5px solid #E0E0E0')+';border-radius:10px;padding:14px;text-align:center;cursor:pointer;">'+pijl()+'<div style="font-size:16px;font-weight:bold;color:'+(sel==='BSO'?'#2E7D32':'#9E9E9E')+';">BSO</div><div style="font-size:11px;color:'+(sel==='BSO'?'#2E7D32':'#9E9E9E')+';margin-top:4px;">14:00 - 18:00</div></div>';
+    h+='<div onclick="selDagdeel(\'BSO\')" style="background:'+(sel==='BSO'?'#E8F5E9':'#F5F5F5')+';border:'+(sel==='BSO'?'2px solid #4CAF50':'1.5px solid #E0E0E0')+';border-radius:10px;padding:14px;text-align:center;cursor:pointer;"><div style="font-size:16px;font-weight:bold;color:'+(sel==='BSO'?'#2E7D32':'#9E9E9E')+';">BSO</div><div style="font-size:11px;color:'+(sel==='BSO'?'#2E7D32':'#9E9E9E')+';margin-top:4px;">14:00 - 18:00</div></div>';
     h+='</div></div><div style="font-size:14px;font-weight:bold;margin-bottom:12px;">Deze Week</div><div style="display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin-bottom:16px;">'+dagKn+'</div></div>';
     return h;
 }
@@ -624,7 +673,7 @@ function schAanwezig(){
     h+='<div style="font-size:10px;color:'+kleurTxt+';opacity:0.65;margin-top:7px;">* Max 8 per stint/busje · max 6 per lopende PM · pas aan in planning</div>';
     h+='</div>';
 
-    h+='<div style="overflow-y:auto;max-height:370px;padding:8px 10px 80px;">';
+    h+=scrPijl();h+='<div style="overflow-y:auto;max-height:370px;padding:8px 10px 80px;">';
     aanwKi.forEach(function(k,i){
         if(delKind[i])return;
         h+='<div style="background:white;border:2px solid '+(k.ver?'#90CAF9':'#C8E6C9')+';border-radius:12px;padding:11px 13px;margin-bottom:7px;display:flex;align-items:center;gap:11px;"><div style="width:40px;height:40px;background:'+(k.ver?'#2196F3':'#4CAF50')+';border-radius:50%;display:flex;align-items:center;justify-content:center;color:white;font-size:16px;font-weight:bold;">'+k.n[0]+'</div><div style="flex:1;"><div style="font-size:13px;font-weight:bold;">'+k.n+(k.ver?' <span style="background:#E3F2FD;color:#1565C0;border-radius:12px;padding:2px 7px;font-size:10px;">🏫 Ver gelegen</span>':'')+'</div><div style="font-size:11px;color:#757575;margin-top:2px;">'+k.l+' jaar</div></div><span onclick="delK('+i+')" style="width:26px;height:26px;border:2px solid #FF9800;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;color:#FF9800;font-size:13px;font-weight:bold;">✕</span></div>';
@@ -740,6 +789,66 @@ function schAuth(){
     +'<div style="border:1.5px solid #E0E0E0;border-radius:10px;padding:13px 14px;display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;"><span style="font-size:14px;color:#333;letter-spacing:2px;">••••••••</span><span style="font-size:18px;color:#9E9E9E;">👁️</span></div>'
     +'<button onclick="next()" style="width:100%;padding:13px;background:linear-gradient(135deg,#2196F3,#1565C0);color:white;border:none;border-radius:10px;font-size:15px;font-weight:bold;cursor:pointer;font-family:inherit;">🔒 Inloggen</button>'
     +'</div></div>';
+}
+
+function schPIN(){
+    var naam=huidigePM||'Sarah';
+    var init=naam[0].toUpperCase();
+    var h='<div style="background:#2E7D32;color:white;padding:12px 14px;display:flex;align-items:center;gap:10px;">'
+        +'<div onclick="prev()" style="background:rgba(255,255,255,0.2);border:1.5px solid rgba(255,255,255,0.4);border-radius:8px;padding:6px 11px;font-size:12px;font-weight:bold;cursor:pointer;">← Terug</div>'
+        +'<h1 style="font-size:15px;font-weight:bold;flex:1;">PIN-code</h1>'
+        +'</div>';
+    h+='<div style="padding:24px 20px;text-align:center;">';
+    h+='<div style="width:72px;height:72px;border-radius:50%;background:#2E7D32;color:white;display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:bold;margin:0 auto 14px;">'+init+'</div>';
+    h+='<div style="font-size:20px;font-weight:bold;margin-bottom:6px;">'+naam+'</div>';
+    h+='<div style="font-size:13px;color:#757575;margin-bottom:32px;">Voer je 4-cijferige PIN-code in</div>';
+    // 4 PIN vakjes (gevuld als demo)
+    h+='<div style="display:flex;justify-content:center;gap:16px;margin-bottom:28px;">';
+    for(var i=0;i<4;i++){
+        h+='<div style="width:56px;height:64px;border:2px solid #2E7D32;border-radius:14px;background:white;display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:bold;">•</div>';
+    }
+    h+='</div>';
+    h+='<div style="background:#E8F5E9;border:1px solid #A5D6A7;border-radius:10px;padding:10px 14px;font-size:12px;color:#2E7D32;margin-bottom:20px;">✓ PIN correct — doorgaan naar 2FA verificatie</div>';
+    h+=volgKnop();
+    h+='<div style="font-size:11px;color:#BDBDBD;margin-top:12px;">In de echte app voer je hier je eigen PIN in</div>';
+    h+='</div>';
+    return h;
+}
+
+function schTOTP(){
+    var h='<div style="background:#2E7D32;color:white;padding:12px 14px;display:flex;align-items:center;gap:10px;">'
+        +'<div onclick="prev()" style="background:rgba(255,255,255,0.2);border:1.5px solid rgba(255,255,255,0.4);border-radius:8px;padding:6px 11px;font-size:12px;font-weight:bold;cursor:pointer;">← Terug</div>'
+        +'<h1 style="font-size:15px;font-weight:bold;flex:1;">2-staps verificatie</h1>'
+        +'</div>';
+    h+='<div style="padding:20px;text-align:center;">';
+    h+='<div style="width:64px;height:64px;border-radius:50%;background:#E8F5E9;display:flex;align-items:center;justify-content:center;margin:0 auto 14px;">';
+    h+='<svg width="34" height="34" viewBox="0 0 24 24" fill="#2E7D32"><path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z"/></svg>';
+    h+='</div>';
+    h+='<div style="font-size:18px;font-weight:bold;margin-bottom:8px;">2-staps verificatie</div>';
+    h+='<div style="font-size:12px;color:#757575;margin-bottom:24px;">Open Google Authenticator en voer de 6-cijferige code in</div>';
+    // Code invoervak
+    h+='<div style="background:white;border:2px solid #A5D6A7;border-radius:16px;padding:20px;margin-bottom:16px;">';
+    h+='<div style="display:flex;justify-content:center;gap:8px;margin-bottom:14px;">';
+    var code=['4','8','2','1','9','3'];
+    code.forEach(function(c){
+        h+='<div style="width:36px;height:44px;border:2px solid #2E7D32;border-radius:10px;background:#F1F8E9;display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:bold;color:#1B5E20;">'+c+'</div>';
+    });
+    h+='</div>';
+    // Timer cirkel
+    h+='<div style="display:flex;align-items:center;justify-content:center;gap:10px;">';
+    h+='<div style="width:32px;height:32px;border-radius:50%;border:3px solid #2E7D32;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:bold;color:#2E7D32;">18</div>';
+    h+='<div style="font-size:12px;color:#757575;">Code vervalt over 18 seconden</div>';
+    h+='</div></div>';
+    // Eerste keer QR setup uitleg
+    h+='<div style="background:#FFF8E1;border:1.5px solid #FFE082;border-radius:12px;padding:12px 14px;text-align:left;margin-bottom:16px;">';
+    h+='<div style="font-size:12px;font-weight:bold;color:#E65100;margin-bottom:4px;">Eerste keer? QR-code scannen</div>';
+    h+='<div style="font-size:11px;color:#757575;line-height:1.5;">Installeer Google Authenticator → scan de QR-code → klaar. Daarna elke keer automatisch een nieuwe code.</div>';
+    h+='</div>';
+    h+='<div style="background:#E8F5E9;border:1px solid #A5D6A7;border-radius:10px;padding:10px 14px;font-size:12px;color:#2E7D32;margin-bottom:16px;">✓ Code correct — inloggen gelukt!</div>';
+    h+=volgKnop();
+    h+='<div style="font-size:11px;color:#BDBDBD;margin-top:12px;">In de echte app gebruik je jouw eigen authenticator code</div>';
+    h+='</div>';
+    return h;
 }
 
 function schAVG(){
@@ -1148,6 +1257,139 @@ window.simOffline=function(){
     setTimeout(function(){verbergOfflineBanner();},4000);
 };
 
+
+
+
+// ── GUIDED TOUR v2 ────────────────────────────────────────
+var _tourStappen = {
+  'home':[
+    {s:'#scr',t:'Beheer App',d:'Dit is de beheerkant voor de coördinator. Plan hier dagelijks de vervoersverdeling voor alle PMs.'},
+    {s:'#scr .beheer-item',t:'Dagplanning',d:'Start hier de dagelijkse planning. Kies datum, dagdeel, welke kinderen aanwezig zijn en wie er werkt.'},
+  ],
+  'datum':[
+    {s:'#scr .dbb.today',t:'Selecteer een dag',d:'Tik op een dag om die te selecteren. De app laadt dan automatisch de juiste kinderen en PMs.'},
+    {s:'#scr .dbb.sel,#scr .dbb.today',t:'Datum geselecteerd',d:'De geselecteerde dag is blauw. Tik op een andere dag om te wisselen — de demo gaat dan automatisch verder.'},
+  ],
+  'aanwezig':[
+    {s:'#scr [style*="FFEBEE"]',t:'PM Advies',d:'De app berekent automatisch hoeveel PMs je nodig hebt op basis van het aantal kinderen en vervoerscapaciteit.'},
+    {s:'#scr [style*="overflow-y:auto"]',t:'Kinderen beheren',d:'Verwijder kinderen die toch niet komen met het kruisje rechts. Of voeg een flexkind toe via de oranje knop.'},
+  ],
+  'pmsel':[
+    {s:'#scr',t:'PMs selecteren',d:'Vink de PMs aan die vandaag meerijden. De app gebruikt dit voor de vervoersverdeling.'},
+  ],
+  'planning':[
+    {s:'#scr',t:'Verdelen',d:'Wijs PMs toe aan stints en busje. De app bewaakt de maximale capaciteit per vervoersmiddel.'},
+  ],
+  'auth':[
+    {s:'#scr .lbox',t:'Veilig inloggen',d:'Elke PM logt in met een persoonlijk wachtwoord — beveiligd met PIN-code en 2-staps verificatie.'},
+  ],
+  'avg':[
+    {s:'#scr',t:'AVG & Privacy',d:'Bij het eerste gebruik akkoord geven met de privacyverklaring. Daarna nooit meer gevraagd.'},
+  ],
+  'pmkies':[
+    {s:'#scr .ps2',t:'Kies je naam',d:'De PM selecteert zijn of haar naam uit de lijst. Tik op een naam om in te loggen.'},
+  ],
+  'lijst':[
+    {s:'#scr .spraak-balk',t:'🎤 Spraakherkenning',d:'Tik op de microfoon en zeg een kindernaam — het kind wordt automatisch afgevinkt. Handen vrij!'},
+    {s:'#scr .ps3.eigen.expanded',t:'Jouw ophaallijst',d:'Jouw kinderen staan uitgevouwen bovenaan. Je ziet direct de voortgang.'},
+    {s:'#scr .kind',t:'Kindkaart',d:'Tik om af te vinken. Bel of WhatsApp de ouder direct vanuit de kaart.'},
+  ],
+  'andere':[
+    {s:'#scr .ps3',t:'Andere PMs',d:'Je ziet ook de lijsten van je collega-PMs — handig bij overdragen of controleren.'},
+  ],
+  'specschool':[
+    {s:'#scr .ovb',t:'Ver gelegen school',d:'Kinderen van een verder gelegen school staan apart gegroepeerd. Tik op de oranje knop als de overstappers zijn uitgestapt.'},
+  ],
+  'tussenstop':[
+    {s:'#scr #tuss-b',t:'Tussenstop',d:'Duidelijke banner als er een tussenstop is. Je weet exact waar kinderen worden afgezet.'},
+  ],
+  'busrit':[
+    {s:'#scr .brtab',t:'Meerdere busritten',d:'Schakel eenvoudig tussen rit 1 en rit 2. Elke PM ziet zijn eigen passagierslijst.'},
+  ],
+  'wacht':[
+    {s:'#scr .wb.wacht',t:'Wacht op busje',d:'Banner zolang het busje nog onderweg is. Zodra de bus-PM klaar is verdwijnt deze automatisch.'},
+  ],
+  'extra':[
+    {s:'#scr .es.fietsen .eh',t:'Fietsen & zelfstandig',d:'Kinderen die zelfstandig komen of fietsen staan apart. Vink af als ze aangekomen zijn.'},
+  ],
+  'afvinken':[
+    {s:'#scr #vink-b',t:'Iedereen opgehaald',d:'Als alle kinderen afgevinkt zijn verschijnt de grote groene knop. Eén tik en de lijst is klaar!'},
+  ],
+};
+
+var _tIdx=0, _tItems=[], _tAan=false;
+
+function tourStart(s){
+  var items=_tourStappen[s];
+  if(!items||!items.length) return;
+  _tItems=items; _tIdx=0; _tAan=true;
+  setTimeout(function(){_tStap(0);},500);
+}
+
+function _tStap(i){
+  var wrap=document.getElementById('tour-wrap');
+  var spot=document.getElementById('tour-spot');
+  var card=document.getElementById('tour-card');
+  if(!wrap||!spot||!card) return;
+  if(i>=_tItems.length){tourSluiten();return;}
+
+  var item=_tItems[i];
+  var el=document.querySelector(item.s);
+  if(!el){_tStap(i+1);return;}
+
+  wrap.style.display='block';
+
+  // Scroll element in beeld
+  try{el.scrollIntoView({block:'nearest'});}catch(e){}
+
+  setTimeout(function(){
+    var scr=document.getElementById('scr');
+    if(!scr) return;
+    var scrR=scr.getBoundingClientRect();
+    var elR=el.getBoundingClientRect();
+    var pad=4;
+
+    // Spotlight positie relatief aan scr
+    var st=elR.top-scrR.top+pad*-1;
+    var sl=elR.left-scrR.left+pad*-1;
+    var sw=elR.width+pad*2;
+    var sh=elR.height+pad*2;
+
+    spot.style.top=(st)+'px';
+    spot.style.left=(sl)+'px';
+    spot.style.width=sw+'px';
+    spot.style.height=sh+'px';
+
+    // Card: onder element of boven als te laag
+    var scrH=scrR.height;
+    var cardTop=st+sh+10;
+    if(cardTop+180>scrH) cardTop=Math.max(4,st-190);
+    card.style.top=cardTop+'px';
+    card.style.bottom='auto';
+
+    var last=(i===_tItems.length-1);
+    card.innerHTML='<h4>'+item.t+'</h4><p>'+item.d+'</p>'
+      +'<div class="tnav"><span class="tstap">'+(i+1)+' / '+_tItems.length+'</span>'
+      +'<div class="tbtns">'
+      +'<button class="tbtn pr" onclick="'+(last?'tourSluiten()':'_tStap('+(i+1)+')')+'">'+( last?'✓ Probeer zelf!':'Volgende →')+'</button>'
+      +'</div></div>';
+  },200);
+}
+
+window.tourSluiten=function(){
+  var w=document.getElementById('tour-wrap');
+  if(w) w.style.display='none';
+  _tAan=false;
+};
+
+// Hook render
+var _oRender=window.render;
+window.render=function(){
+  tourSluiten();
+  _oRender();
+  var s=STAPPEN[stap];
+  if(s&&s.s) setTimeout(function(){tourStart(s.s);},600);
+};
 
 </script>
 </body>
