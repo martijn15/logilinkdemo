@@ -327,8 +327,11 @@ html,body{height:100%;overflow:hidden;background:#4CAF50;font-family:-apple-syst
       <div class="lan">Logilink BSO</div>
       <div class="lsub">Ophaalplanning</div>
       <div class="ltag">Interactieve demo · BrAIn Apps</div>
-      <input class="lf" id="pw-in" type="password" placeholder="Wachtwoord"
-             autocomplete="off" onkeydown="if(event.key==='Enter')login()">
+      <div style="position:relative;">
+        <input class="lf" id="pw-in" type="password" placeholder="Wachtwoord"
+               autocomplete="off" onkeydown="if(event.key==='Enter')login()" style="padding-right:44px;width:100%;">
+        <button onclick="var i=document.getElementById('pw-in');i.type=i.type==='password'?'text':'password';this.textContent=i.type==='password'?'👁️':'🙈';" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:18px;padding:4px;">👁️</button>
+      </div>
       <div class="lerr" id="lerr">Onjuist wachtwoord</div>
       <button class="lbm" onclick="login()">🔓 Toegang tot demo</button>
       <div class="lft">© 2026 BrAIn Apps · Martijn van den Brakel</div>
