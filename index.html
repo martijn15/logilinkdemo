@@ -1133,5 +1133,74 @@ window.render=function(){
   if(s&&s.s) setTimeout(function(){sbToon(s.s);},400);
 };
 
+
+// ── STAP BANNER TOUR ─────────────────────────────────────
+var _sbItems=[], _sbIdx=0, _sbAan=false;
+
+var _sbStappen={
+  'home':[
+    {t:'Beheer App',d:'Dit is de beheerkant voor de coördinator. Plan hier dagelijks de vervoersverdeling.'},
+    {t:'Dagplanning starten',d:'Tik op Dagplanning om te starten. Kies datum, dagdeel en welke kinderen aanwezig zijn.'},
+  ],
+  'datum':[{t:'Dagdeel & Datum',d:'Kies BSO of VSO en selecteer de dag. De app laadt automatisch de juiste kinderen.'}],
+  'aanwezig':[
+    {t:'PM Advies',d:'De app berekent automatisch hoeveel PMs je nodig hebt op basis van het aantal kinderen en vervoer.'},
+    {t:'Kinderen beheren',d:'Verwijder kinderen die toch niet komen met het kruisje rechts. Of voeg een flexkind toe.'},
+  ],
+  'pmsel':[{t:'PMs selecteren',d:'Vink de PMs aan die vandaag meerijden. De app gebruikt dit voor de vervoersverdeling.'}],
+  'planning':[{t:'Verdelen',d:'Wijs PMs toe aan stints en busje. De app bewaakt de maximale capaciteit per vervoersmiddel.'}],
+  'auth':[{t:'Veilig inloggen',d:'Elke PM logt in met een persoonlijk wachtwoord — beveiligd met PIN-code en 2-staps verificatie.'}],
+  'pin':[{t:'PIN-code',d:'Na je naam voer je een persoonlijke 4-cijferige PIN in. Eerste keer? Dan stel je hem zelf in.'}],
+  'totp':[{t:'2-staps verificatie',d:'Na je PIN voer je een 6-cijferige code in uit Google Authenticator. Maximale beveiliging voor persoonsgegevens.'}],
+  'avg':[{t:'AVG & Privacy',d:'Bij het eerste gebruik akkoord geven met de privacyverklaring. Daarna nooit meer gevraagd.'}],
+  'pmkies':[{t:'Kies je naam',d:'Tik op jouw naam om in te loggen. De app toont direct jouw persoonlijke ophaallijst.'}],
+  'lijst':[
+    {t:'Spraakherkenning',d:'Tik op de microfoon en zeg een kindernaam — het kind wordt automatisch afgevinkt. Handen vrij!'},
+    {t:'Jouw ophaallijst',d:'Jouw kinderen staan uitgevouwen bovenaan. Per kind zie je WhatsApp en bel knoppen.'},
+    {t:'Kindkaart',d:'Tik op een kaart om het kind af te vinken. Bel of WhatsApp de ouder direct vanuit de kaart.'},
+  ],
+  'andere':[{t:'Andere PMs',d:'Je ziet ook de lijsten van je collega-PMs — handig bij overdragen of controleren.'}],
+  'specschool':[{t:'Ver gelegen school',d:'Kinderen van een verder gelegen school staan apart. Tik op de oranje knop als de overstappers zijn uitgestapt.'}],
+  'tussenstop':[{t:'Tussenstop',d:'Duidelijke banner als er een tussenstop is. Je weet exact waar kinderen worden afgezet.'}],
+  'busrit':[{t:'Meerdere busritten',d:'Schakel eenvoudig tussen rit 1 en rit 2. Elke PM ziet zijn eigen passagierslijst.'}],
+  'wacht':[{t:'Wacht op busje',d:'Banner zolang het busje nog onderweg is. Zodra de bus-PM klaar is verdwijnt deze automatisch.'}],
+  'extra':[{t:'Fietsen & zelfstandig',d:'Kinderen die zelfstandig komen of fietsen staan apart. Vink af als ze aangekomen zijn.'}],
+  'afvinken':[{t:'Iedereen opgehaald',d:'Als alle kinderen afgevinkt zijn verschijnt de grote groene knop. Een tik en de lijst is klaar!'}],
+};
+
+window.sbToon=function(s){
+  var items=_sbStappen[s];
+  if(!items||!items.length) return;
+  _sbItems=items; _sbIdx=0; _sbAan=true;
+  setTimeout(function(){sbRender();},300);
+};
+
+function sbRender(){
+  var el=document.getElementById('stap-banner');
+  if(!el) return;
+  var item=_sbItems[_sbIdx];
+  var last=(_sbIdx===_sbItems.length-1);
+  el.style.display='block';
+  el.innerHTML='<h4>'+item.t+'</h4><p>'+item.d+'</p>'
+    +'<div class="sb-nav"><span class="sb-stap">'+(_sbIdx+1)+' / '+_sbItems.length+'</span>'
+    +'<button class="sb-btn" onclick="'+(last?'sbSluiten()':'sbVolgende()')+'">'
+    +(last?'Probeer zelf! →':'Volgende →')+'</button>'
+    +'</div>';
+}
+
+window.sbVolgende=function(){_sbIdx++;if(_sbIdx>=_sbItems.length){sbSluiten();return;}sbRender();};
+window.sbSluiten=function(){var el=document.getElementById('stap-banner');if(el)el.style.display='none';_sbAan=false;};
+
+// Hook render - na definitie render()
+window.addEventListener('load',function(){
+  var _orig=window.render;
+  window.render=function(){
+    sbSluiten();
+    _orig();
+    var s=STAPPEN[stap];
+    if(s&&s.s) setTimeout(function(){window.sbToon(s.s);},400);
+  };
+});
+
 </script><div id="stap-banner"></div>
 </body></html>
