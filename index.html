@@ -159,24 +159,29 @@ body.unlocked #login-overlay{display:none}
 .tour-pulse{animation:tour-pulse 1.5s ease-in-out infinite}
 @keyframes tour-pulse{0%,100%{box-shadow:0 0 0 0 rgba(76,175,80,0.4)}50%{box-shadow:0 0 0 8px rgba(76,175,80,0)}}
 
-/* ── GUIDED TOUR v2 ──────────────────────────── */
-#tour-wrap{display:none;position:absolute;inset:0;z-index:200}
-#tour-wrap.aan{display:block}
-#tour-dim{position:absolute;inset:0;background:rgba(0,0,0,0.55)}
-#tour-spot{position:absolute;border:2.5px solid #4CAF50;border-radius:10px;
-  box-shadow:0 0 0 9999px rgba(0,0,0,0.55);pointer-events:none;transition:all 0.3s ease;z-index:201}
-#tour-card{position:absolute;left:8px;right:8px;background:white;border-radius:16px;
-  padding:16px;box-shadow:0 8px 32px rgba(0,0,0,0.3);z-index:202;
-  border-top:3px solid #4CAF50}
-#tour-card h4{font-size:14px;font-weight:bold;color:#1B5E20;margin:0 0 6px}
-#tour-card p{font-size:12px;color:#424242;line-height:1.6;margin:0 0 12px}
-.tnav{display:flex;justify-content:space-between;align-items:center}
-.tstap{font-size:11px;color:#9E9E9E}
-.tbtns{display:flex;gap:6px}
-.tbtn{padding:7px 13px;border-radius:20px;font-size:12px;font-weight:600;
-  cursor:pointer;font-family:inherit;border:1.5px solid #4CAF50;color:#4CAF50;background:white}
-.tbtn.pr{background:#4CAF50;color:white}
+
 .tbtn.sk{border-color:#E0E0E0;color:#9E9E9E}
+
+
+/* ── STAP BANNER ── */
+#stap-banner{
+  position:fixed;bottom:0;left:50%;transform:translateX(-50%);
+  width:100%;max-width:430px;
+  background:white;border-top:3px solid #4CAF50;
+  border-radius:16px 16px 0 0;
+  padding:14px 16px 20px;
+  box-shadow:0 -4px 24px rgba(0,0,0,0.15);
+  z-index:9999;display:none;
+  font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+}
+#stap-banner h4{font-size:15px;font-weight:700;color:#1B5E20;margin:0 0 6px}
+#stap-banner p{font-size:13px;color:#424242;line-height:1.5;margin:0 0 12px}
+.sb-nav{display:flex;justify-content:space-between;align-items:center}
+.sb-stap{font-size:11px;color:#9E9E9E}
+.sb-btn{padding:9px 20px;border-radius:20px;font-size:13px;font-weight:700;
+  cursor:pointer;font-family:inherit;border:none;
+  background:#4CAF50;color:white;box-shadow:0 2px 8px rgba(76,175,80,0.4)}
+.sb-btn:active{transform:scale(0.97)}
 
 </style></head><body>
 
@@ -204,7 +209,7 @@ body.unlocked #login-overlay{display:none}
         <div class="sb" id="stepBadge">Stap 1 / 17</div>
     </div>
     <div class="pb"><div class="pf" id="pf" style="width:6%"></div></div>
-    <div class="si"><div class="ic" id="sic">🏠</div><div><h3 id="sti">Home — Beheer App</h3><p id="std">Klik op Dagplanning om te starten!</p></div></div>
+    <div class="si"><div class="ic" id="sic">🏠</div><div><h3 id="sti">Home — Beheer App</h3></div></div>
     <div class="dots" id="dots"></div>
     <div class="nb">
         <button class="prev" id="prevBtn" onclick="prev()" disabled>← Vorige</button>
@@ -212,7 +217,7 @@ body.unlocked #login-overlay{display:none}
     </div>
     <div class="fh"><strong>✨ Features in deze demo:</strong>🏠 Beheer · 📅 Dagplanning · 👥 PMs selecteren · 🔀 Auto-verdelen · 🔐 PM login · 📋 Ophaallijst · 🏫 Ver gelegen school · 🔄 Tussenstop · 🚌 2 Busritten · ⏳ Wacht op busje · 🚶 Zelfstandig/Fiets/Naschools · ✅ Afvinken · 🎤 Spraakherkenning · 📞 Bel/WhatsApp ouder · 🚨 Noodcontacten</div>
 </div>
-<div class="tr"><div class="pf2"><div class="pf3"><div class="pf4"></div><div class="ps" id="scr"></div><div id="tour-wrap" style="position:absolute;top:0;left:0;width:100%;height:100%;z-index:200;display:none;border-radius:24px;overflow:hidden;"><div id="tour-dim" onclick="tourSluiten()" style="position:absolute;inset:0;background:rgba(0,0,0,0.6);"></div><div id="tour-spot" style="position:absolute;border:2.5px solid #4CAF50;border-radius:10px;box-shadow:0 0 0 9999px rgba(0,0,0,0.6);pointer-events:none;transition:all 0.3s;z-index:201;"></div><div id="tour-card" style="position:absolute;left:8px;right:8px;background:white;border-radius:16px;padding:14px;box-shadow:0 8px 32px rgba(0,0,0,0.3);z-index:202;border-top:3px solid #4CAF50;"></div></div></div></div></div>
+<div class="tr"><div class="pf2"><div class="pf3"><div class="pf4"></div><div class="ps" id="scr"></div></div></div>
 </div>
 </div>
 
@@ -869,7 +874,7 @@ function render(){
 
     document.getElementById('sic').textContent=s.ic;
     document.getElementById('sti').textContent=s.t;
-    document.getElementById('std').textContent=s.d;
+    // stap beschrijving verwijderd
     document.getElementById('stepBadge').textContent='Stap '+(stap+1)+' / '+STAPPEN.length;
     document.getElementById('pf').style.width=((stap+1)/STAPPEN.length*100).toFixed(0)+'%';
     document.getElementById('dots').innerHTML=STAPPEN.map(function(_,i){return '<div class="dot'+(i===stap?' active':(i<stap?' done':''))+'" onclick="gaNaar('+i+')"></div>';}).join('');
@@ -1068,7 +1073,7 @@ var _tourStappen = {
   ],
   'aanwezig':[
     {s:'#scr [style*="FFEBEE"]',t:'PM Advies',d:'De app berekent automatisch hoeveel PMs je nodig hebt op basis van het aantal kinderen en vervoerscapaciteit.'},
-    {s:'#scr [style*="overflow-y:auto"]',t:'Kinderen beheren',d:'Verwijder kinderen die toch niet komen met het kruisje rechts. Of voeg een flexkind toe via de oranje knop.'},
+    {s:'#scr #del-k0',t:'Kinderen beheren',d:'Verwijder kinderen die toch niet komen met het kruisje rechts. Of voeg een flexkind toe via de oranje knop.'},
   ],
   'pmsel':[
     {s:'#scr',t:'PMs selecteren',d:'Vink de PMs aan die vandaag meerijden. De app gebruikt dit voor de vervoersverdeling.'},
@@ -1086,30 +1091,30 @@ var _tourStappen = {
     {s:'#scr .ps2',t:'Kies je naam',d:'De PM selecteert zijn of haar naam uit de lijst. Tik op een naam om in te loggen.'},
   ],
   'lijst':[
-    {s:'#scr .spraak-balk',t:'🎤 Spraakherkenning',d:'Tik op de microfoon en zeg een kindernaam — het kind wordt automatisch afgevinkt. Handen vrij!'},
+    {s:'#scr .spraak-balk.uit',t:'🎤 Spraakherkenning',d:'Tik op de microfoon en zeg een kindernaam — het kind wordt automatisch afgevinkt. Handen vrij!'},
     {s:'#scr .ps3.eigen.expanded',t:'Jouw ophaallijst',d:'Jouw kinderen staan uitgevouwen bovenaan. Je ziet direct de voortgang.'},
-    {s:'#scr .kind',t:'Kindkaart',d:'Tik om af te vinken. Bel of WhatsApp de ouder direct vanuit de kaart.'},
+    {s:'#scr .ps3.eigen .pb2',t:'Kindkaart',d:'Tik om af te vinken. Bel of WhatsApp de ouder direct vanuit de kaart.'},
   ],
   'andere':[
-    {s:'#scr .ps3',t:'Andere PMs',d:'Je ziet ook de lijsten van je collega-PMs — handig bij overdragen of controleren.'},
+    {s:'#scr .ps3h',t:'Andere PMs',d:'Je ziet ook de lijsten van je collega-PMs — handig bij overdragen of controleren.'},
   ],
   'specschool':[
-    {s:'#scr .ovb',t:'Ver gelegen school',d:'Kinderen van een verder gelegen school staan apart gegroepeerd. Tik op de oranje knop als de overstappers zijn uitgestapt.'},
+    {s:'#scr #ov-btn',t:'Ver gelegen school',d:'Kinderen van een verder gelegen school staan apart gegroepeerd. Tik op de oranje knop als de overstappers zijn uitgestapt.'},
   ],
   'tussenstop':[
-    {s:'#scr #tuss-b',t:'Tussenstop',d:'Duidelijke banner als er een tussenstop is. Je weet exact waar kinderen worden afgezet.'},
+    {s:'#scr .tb',t:'Tussenstop',d:'Duidelijke banner als er een tussenstop is. Je weet exact waar kinderen worden afgezet.'},
   ],
   'busrit':[
-    {s:'#scr .brtab',t:'Meerdere busritten',d:'Schakel eenvoudig tussen rit 1 en rit 2. Elke PM ziet zijn eigen passagierslijst.'},
+    {s:'#scr #brt-wrap',t:'Meerdere busritten',d:'Schakel eenvoudig tussen rit 1 en rit 2. Elke PM ziet zijn eigen passagierslijst.'},
   ],
   'wacht':[
-    {s:'#scr .wb.wacht',t:'Wacht op busje',d:'Banner zolang het busje nog onderweg is. Zodra de bus-PM klaar is verdwijnt deze automatisch.'},
+    {s:'#scr .wb',t:'Wacht op busje',d:'Banner zolang het busje nog onderweg is. Zodra de bus-PM klaar is verdwijnt deze automatisch.'},
   ],
   'extra':[
-    {s:'#scr .es.fietsen .eh',t:'Fietsen & zelfstandig',d:'Kinderen die zelfstandig komen of fietsen staan apart. Vink af als ze aangekomen zijn.'},
+    {s:'#scr #es-fietsen',t:'Fietsen & zelfstandig',d:'Kinderen die zelfstandig komen of fietsen staan apart. Vink af als ze aangekomen zijn.'},
   ],
   'afvinken':[
-    {s:'#scr #vink-b',t:'Iedereen opgehaald',d:'Als alle kinderen afgevinkt zijn verschijnt de grote groene knop. Eén tik en de lijst is klaar!'},
+    {s:'#scr .vb',t:'Iedereen opgehaald',d:'Als alle kinderen afgevinkt zijn verschijnt de grote groene knop. Eén tik en de lijst is klaar!'},
   ],
 };
 
@@ -1131,46 +1136,49 @@ function _tStap(i){
 
   var item=_tItems[i];
   var el=document.querySelector(item.s);
-  if(!el){_tStap(i+1);return;}
+  if(!el){tourSluiten();return;}
 
   wrap.style.display='block';
+  wrap.style.pointerEvents='all';
 
-  // Scroll element in beeld
-  try{el.scrollIntoView({block:'nearest'});}catch(e){}
+  // Scroll het element in beeld via scr scrollTop
+  var scr=document.getElementById('scr');
+  if(scr && el!==scr){
+    var et=0,ep=el;
+    while(ep&&ep!==scr){et+=ep.offsetTop;ep=ep.offsetParent;}
+    scr.scrollTop=Math.max(0,et-80);
+  }
 
   setTimeout(function(){
-    var scr=document.getElementById('scr');
-    if(!scr) return;
-    var scrR=scr.getBoundingClientRect();
-    var elR=el.getBoundingClientRect();
-    var pad=4;
-
-    // Spotlight positie relatief aan scr
-    var st=elR.top-scrR.top+pad*-1;
-    var sl=elR.left-scrR.left+pad*-1;
-    var sw=elR.width+pad*2;
-    var sh=elR.height+pad*2;
-
-    spot.style.top=(st)+'px';
-    spot.style.left=(sl)+'px';
+    // Gebruik parent van wrap als referentie
+    var pf=wrap.parentElement||wrap;
+    var pR=pf.getBoundingClientRect();
+    var eR=el.getBoundingClientRect();
+    var pad=6;
+    var sl=eR.left-pR.left-pad;
+    var st=eR.top-pR.top-pad;
+    var sw=eR.width+pad*2;
+    var sh=eR.height+pad*2;
+    if(sl<0){sw+=sl;sl=0;}
+    if(st<0){sh+=st;st=0;}
+    spot.style.left=sl+'px';
+    spot.style.top=st+'px';
     spot.style.width=sw+'px';
     spot.style.height=sh+'px';
-
-    // Card: onder element of boven als te laag
-    var scrH=scrR.height;
-    var cardTop=st+sh+10;
-    if(cardTop+180>scrH) cardTop=Math.max(4,st-190);
+    var wH=pR.height;
+    var cardTop=st+sh+12;
+    if(cardTop+210>wH) cardTop=Math.max(st-220,8);
     card.style.top=cardTop+'px';
     card.style.bottom='auto';
-
     var last=(i===_tItems.length-1);
     card.innerHTML='<h4>'+item.t+'</h4><p>'+item.d+'</p>'
       +'<div class="tnav"><span class="tstap">'+(i+1)+' / '+_tItems.length+'</span>'
       +'<div class="tbtns">'
-      +'<button class="tbtn pr" onclick="'+(last?'tourSluiten()':'_tStap('+(i+1)+')')+'">'+( last?'✓ Probeer zelf!':'Volgende →')+'</button>'
+      +'<button class="tbtn pr" onclick="'+(last?'tourSluiten()':'_tStap('+(i+1)+')')+'">'+(last?'✓ Probeer zelf!':'Volgende →')+'</button>'
       +'</div></div>';
-  },200);
+  },450);
 }
+
 
 window.tourSluiten=function(){
   var w=document.getElementById('tour-wrap');
@@ -1187,4 +1195,110 @@ window.render=function(){
   if(s&&s.s) setTimeout(function(){tourStart(s.s);},600);
 };
 
-</script></body></html>
+
+// ── STAP BANNER TOUR ─────────────────────────────────────
+var _sbItems=[], _sbIdx=0, _sbAan=false;
+
+var _sbStappen={
+  'home':[
+    {t:'Beheer App',d:'Dit is de beheerkant voor de coördinator. Plan hier dagelijks de vervoersverdeling.'},
+    {t:'Dagplanning starten',d:'Tik op Dagplanning om te starten. Je kiest datum, dagdeel en welke kinderen aanwezig zijn.'},
+  ],
+  'datum':[
+    {t:'Dagdeel & Datum',d:'Kies BSO of VSO en selecteer de dag. De app laadt automatisch de juiste kinderen.'},
+  ],
+  'aanwezig':[
+    {t:'PM Advies',d:'De app berekent automatisch hoeveel PMs je nodig hebt op basis van het aantal kinderen en vervoer.'},
+    {t:'Kinderen beheren',d:'Verwijder kinderen die toch niet komen met het kruisje rechts. Of voeg een flexkind toe.'},
+  ],
+  'pmsel':[
+    {t:'PMs selecteren',d:'Vink de PMs aan die vandaag meerijden. De app gebruikt dit voor de vervoersverdeling.'},
+  ],
+  'planning':[
+    {t:'Verdelen',d:'Wijs PMs toe aan stints en busje. De app bewaakt de maximale capaciteit per vervoersmiddel.'},
+  ],
+  'auth':[
+    {t:'Veilig inloggen',d:'Elke PM logt in met een persoonlijk wachtwoord — beveiligd met PIN-code en 2-staps verificatie.'},
+  ],
+  'pin':[
+    {t:'PIN-code',d:'Na je naam selecteren voer je een persoonlijke 4-cijferige PIN in. Eerste keer? Dan stel je hem zelf in.'},
+  ],
+  'totp':[
+    {t:'2-staps verificatie',d:'Na je PIN voer je een 6-cijferige code in uit Google Authenticator. Maximale beveiliging voor persoonsgegevens van kinderen.'},
+  ],
+  'avg':[
+    {t:'AVG & Privacy',d:'Bij het eerste gebruik akkoord geven met de privacyverklaring. Daarna nooit meer gevraagd.'},
+  ],
+  'pmkies':[
+    {t:'Kies je naam',d:'De PM selecteert zijn of haar naam. Daarna volgt PIN-code en 2FA verificatie.'},
+  ],
+  'lijst':[
+    {t:'🎤 Spraakherkenning',d:'Tik op de microfoon en zeg een kindernaam — het kind wordt automatisch afgevinkt. Handen vrij tijdens ophalen!'},
+    {t:'Jouw ophaallijst',d:'Jouw kinderen staan uitgevouwen bovenaan. Per kind zie je direct WhatsApp en bel knoppen.'},
+    {t:'Kindkaart',d:'Tik op een kaart om het kind af te vinken. Bel of WhatsApp de ouder direct vanuit de kaart.'},
+  ],
+  'andere':[
+    {t:'Andere PMs',d:'Je ziet ook de lijsten van je collega-PMs — handig bij overdragen of controleren.'},
+  ],
+  'specschool':[
+    {t:'Ver gelegen school',d:'Kinderen van een verder gelegen school staan apart. Tik op de oranje knop als de overstappers zijn uitgestapt.'},
+  ],
+  'tussenstop':[
+    {t:'Tussenstop',d:'Duidelijke banner als er een tussenstop is. Je weet exact waar kinderen worden afgezet.'},
+  ],
+  'busrit':[
+    {t:'Meerdere busritten',d:'Schakel eenvoudig tussen rit 1 en rit 2. Elke PM ziet zijn eigen passagierslijst.'},
+  ],
+  'wacht':[
+    {t:'Wacht op busje',d:'Banner zolang het busje nog onderweg is. Zodra de bus-PM klaar is verdwijnt deze automatisch.'},
+  ],
+  'extra':[
+    {t:'Fietsen & zelfstandig',d:'Kinderen die zelfstandig komen of fietsen staan apart. Vink af als ze aangekomen zijn.'},
+  ],
+  'afvinken':[
+    {t:'Iedereen opgehaald',d:'Als alle kinderen afgevinkt zijn verschijnt de grote groene knop. Eén tik en de lijst is klaar!'},
+  ],
+};
+
+function sbToon(s){
+  var items=_sbStappen[s];
+  if(!items||!items.length) return;
+  _sbItems=items; _sbIdx=0; _sbAan=true;
+  setTimeout(function(){sbRender();},300);
+}
+
+function sbRender(){
+  var el=document.getElementById('stap-banner');
+  if(!el) return;
+  var item=_sbItems[_sbIdx];
+  var last=(_sbIdx===_sbItems.length-1);
+  el.style.display='block';
+  el.innerHTML='<h4>'+item.t+'</h4><p>'+item.d+'</p>'
+    +'<div class="sb-nav"><span class="sb-stap">'+(_sbIdx+1)+' / '+_sbItems.length+'</span>'
+    +'<button class="sb-btn" onclick="'+(last?'sbSluiten()':'sbVolgende()')+'">'+(last?'✓ Probeer zelf!':'Volgende →')+'</button>'
+    +'</div>';
+}
+
+window.sbVolgende=function(){
+  _sbIdx++;
+  if(_sbIdx>=_sbItems.length){sbSluiten();return;}
+  sbRender();
+};
+
+window.sbSluiten=function(){
+  var el=document.getElementById('stap-banner');
+  if(el) el.style.display='none';
+  _sbAan=false;
+};
+
+// Hook render
+var _sbOrigRender=window.render;
+window.render=function(){
+  sbSluiten();
+  _sbOrigRender();
+  var s=STAPPEN[stap];
+  if(s&&s.s) setTimeout(function(){sbToon(s.s);},400);
+};
+
+</script><div id="stap-banner"></div>
+</body></html>
