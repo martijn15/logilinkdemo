@@ -964,6 +964,14 @@ function startSpraak(){
         spraakBalkVernieuwen();
         // Check of kindernaam herkend - met fuzzy matching
         var gesproken = tekst.toLowerCase().trim();
+        // Fonetische normalisatie (K/C, IJ/Y, etc.)
+        function fonNorm(s){
+            return s.replace(/k/g,'c').replace(/ij/g,'y').replace(/ei/g,'y')
+                    .replace(/ou/g,'au').replace(/ph/g,'f').replace(/th/g,'t')
+                    .replace(/ck/g,'c').replace(/ch/g,'g').replace(/sch/g,'sg')
+                    .replace(/[aeiou]+/g,function(m){return m[0];});
+        }
+        var gesprokenFon = fonNorm(gesproken);
         var kinderen = document.querySelectorAll('.nm');
         var besteMatch = null, besteScore = 0, besteEl = null;
         kinderen.forEach(function(el){
@@ -982,6 +990,12 @@ function startSpraak(){
             else if(woorden[1] && woorden[1].length > 2 && gesproken.includes(woorden[1])) score = 70;
             // Gedeeltelijke match: begint naam met gesproken tekst?
             else if(woorden[0] && woorden[0].startsWith(gesproken.split(' ')[0]) && gesproken.split(' ')[0].length > 2) score = 60;
+            // Fonetische match
+            else if(woorden[0] && gesproken.split(' ')[0]){
+                var fa=fonNorm(woorden[0]), fb=fonNorm(gesproken.split(' ')[0]);
+                if(fa===fb && fa.length>1) score=85;
+                else if(fa.length>2 && fb.length>2 && (fa.startsWith(fb.substring(0,3))||fb.startsWith(fa.substring(0,3)))) score=65;
+            }
             // Levenshtein op voornaam
             else if(woorden[0] && gesproken.split(' ')[0]){
                 var a=woorden[0], b=gesproken.split(' ')[0];
