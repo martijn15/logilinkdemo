@@ -1166,23 +1166,53 @@ function startSpraak(){
         for (var i=e.resultIndex;i<e.results.length;i++) tekst += e.results[i][0].transcript;
         _spraakStatus = tekst;
         spraakBalkVernieuwen();
-        // Check of kindernaam herkend
+        // Check of kindernaam herkend - met fuzzy matching
+        var gesproken = tekst.toLowerCase().trim();
         var kinderen = document.querySelectorAll('.nm');
+        var besteMatch = null, besteScore = 0, besteEl = null;
         kinderen.forEach(function(el){
-            var naam = el.textContent.replace('🏫','').replace('🔄','').trim().toLowerCase();
-            if (tekst.toLowerCase().includes(naam) && naam.length > 2) {
-                var kindEl = el.closest('.kind');
-                if (kindEl && !kindEl.classList.contains('af')) {
-                    var id = kindEl.id.replace('k-','');
-                    _spraakMatch = true;
-                    _spraakStatus = '✓ '+el.textContent.trim()+' herkend!';
-                    stopSpraak();
-                    togKind(id);
-                    spraakBalkVernieuwen();
-                    setTimeout(function(){ _spraakMatch=false; _spraakStatus=''; spraakBalkVernieuwen(); }, 2500);
+            var kindEl = el.closest('.kind');
+            if(!kindEl || kindEl.classList.contains('af')) return;
+            var volledigeNaam = el.textContent.replace(/[🏫🔄]/g,'').trim();
+            var naamLower = volledigeNaam.toLowerCase();
+            // Splits in woorden (voornaam, achternaam)
+            var woorden = naamLower.split(/\s+/);
+            var score = 0;
+            // Exacte match volledige naam
+            if(gesproken.includes(naamLower)) score = 100;
+            // Match op voornaam alleen
+            else if(woorden[0] && woorden[0].length > 2 && gesproken.includes(woorden[0])) score = 80;
+            // Match op achternaam alleen
+            else if(woorden[1] && woorden[1].length > 2 && gesproken.includes(woorden[1])) score = 70;
+            // Gedeeltelijke match: begint naam met gesproken tekst?
+            else if(woorden[0] && woorden[0].startsWith(gesproken.split(' ')[0]) && gesproken.split(' ')[0].length > 2) score = 60;
+            // Levenshtein op voornaam
+            else if(woorden[0] && gesproken.split(' ')[0]){
+                var a=woorden[0], b=gesproken.split(' ')[0];
+                if(a.length>2 && b.length>2){
+                    // Simpele edit distance
+                    var m=a.length,n=b.length,d=[];
+                    for(var ii=0;ii<=m;ii++){d[ii]=[ii];}
+                    for(var jj=0;jj<=n;jj++){d[0][jj]=jj;}
+                    for(var ii=1;ii<=m;ii++) for(var jj=1;jj<=n;jj++){
+                        d[ii][jj]=a[ii-1]===b[jj-1]?d[ii-1][jj-1]:1+Math.min(d[ii-1][jj],d[ii][jj-1],d[ii-1][jj-1]);
+                    }
+                    var dist=d[m][n];
+                    if(dist<=2) score=50-dist*10;
                 }
             }
+            if(score > besteScore){besteScore=score; besteMatch=volledigeNaam; besteEl=el;}
         });
+        if(besteScore >= 50 && besteEl){
+            var kindEl = besteEl.closest('.kind');
+            var id = kindEl.id.replace('k-','');
+            _spraakMatch = true;
+            _spraakStatus = '✓ '+besteMatch+' herkend!';
+            stopSpraak();
+            togKind(id);
+            spraakBalkVernieuwen();
+            setTimeout(function(){ _spraakMatch=false; _spraakStatus=''; spraakBalkVernieuwen(); }, 2500);
+        }
     };
     _spraakRecognition.onerror = function(){ _spraakAan=false; spraakBalkVernieuwen(); };
     _spraakRecognition.onend = function(){ _spraakAan=false; spraakBalkVernieuwen(); };
