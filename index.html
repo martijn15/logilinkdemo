@@ -966,7 +966,7 @@ function startSpraak(){
         var gesproken = tekst.toLowerCase().trim();
 
         function fonNorm(s){
-            return s.toLowerCase()
+            var r = s.toLowerCase()
                 .replace(/-/g,' ').replace(/\./g,'')
                 .replace(/sch/g,'sk').replace(/ch/g,'k').replace(/ck/g,'k')
                 .replace(/ph/g,'f').replace(/th/g,'t')
@@ -975,9 +975,16 @@ function startSpraak(){
                 .replace(/aa/g,'a').replace(/ee/g,'e').replace(/oo/g,'o').replace(/uu/g,'u')
                 .replace(/v/g,'f').replace(/w/g,'f')
                 .replace(/c([^h])/g,'k$1').replace(/c$/g,'k')
+                .replace(/g/g,'k')
                 .replace(/z/g,'s').replace(/x/g,'ks')
-                .replace(/y/g,'i').replace(/yt/g,'it').replace(/sy/g,'si')
-                .replace(/[^a-z ]/g,'').trim();
+                .replace(/y/g,'i').replace(/j/g,'i')
+                .replace(/h$/g,'').replace(/ h/g,' ')
+                .replace(/d$/g,'t').replace(/d /g,'t ')
+                .replace(/[^a-z ]/g,'')
+                // Reduceer dubbele medeklinkers
+                .replace(/(.)\1+/g,'$1')
+                .trim();
+            return r;
         }
 
         var aliassen = {
@@ -1018,7 +1025,7 @@ function startSpraak(){
             'imke':['imce','imkuh','ymke'],
             'ymke':['imke'],
             // Marcel
-            'marcel':['marsell','marseel','marsel'],
+            'marcel':['marsell','marseel','marsel','marseul'],
             // Jeske
             'jeske':['yeske','jske','geske'],
             // Alexander
