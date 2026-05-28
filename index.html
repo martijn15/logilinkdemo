@@ -962,55 +962,93 @@ function startSpraak(){
         for (var i=e.resultIndex;i<e.results.length;i++) tekst += e.results[i][0].transcript;
         _spraakStatus = tekst;
         spraakBalkVernieuwen();
-        // Check of kindernaam herkend - met fuzzy matching
+        // Check of kindernaam herkend - met fuzzy + fonetisch matching
         var gesproken = tekst.toLowerCase().trim();
-        // Fonetische normalisatie (K/C, IJ/Y, etc.)
+
         function fonNorm(s){
-            return s.replace(/k/g,'c').replace(/ij/g,'y').replace(/ei/g,'y')
-                    .replace(/ou/g,'au').replace(/ph/g,'f').replace(/th/g,'t')
-                    .replace(/ck/g,'c').replace(/ch/g,'g').replace(/sch/g,'sg')
-                    .replace(/[aeiou]+/g,function(m){return m[0];});
+            return s.toLowerCase()
+                .replace(/sch/g,'sk').replace(/ch/g,'k').replace(/ck/g,'k')
+                .replace(/ph/g,'f').replace(/th/g,'t')
+                .replace(/ij/g,'i').replace(/ei/g,'i').replace(/ie/g,'i')
+                .replace(/ou/g,'o').replace(/au/g,'o').replace(/oe/g,'u')
+                .replace(/aa/g,'a').replace(/ee/g,'e').replace(/oo/g,'o').replace(/uu/g,'u')
+                .replace(/v/g,'f').replace(/w/g,'f').replace(/c/g,'k')
+                .replace(/z/g,'s').replace(/x/g,'ks').replace(/y/g,'i')
+                .replace(/-/g,'').replace(/\./g,'').replace(/[^a-z]/g,'');
         }
-        var gesprokenFon = fonNorm(gesproken);
+
+        var aliassen = {
+            'figo':['vigo'],'vigo':['figo'],
+            'carlijn':['karlijn'],'karlijn':['carlijn'],
+            'sytske':['sitske','siske','sutske'],
+            'gilyanne':['gillianne','giulianne'],
+            'jasmijn':['jasmin','yasmin','yasmijn'],
+            'jinthe':['jinte'],'jinte':['jinthe'],
+            'mirthe':['mirte'],
+            'tycho':['tiko','tyko'],
+            'sigrid':['sigrit'],
+            'hidde':['hide'],
+            'deven':['devin'],
+            'noah':['noa'],
+            'luc':['luck','luk'],
+            'ravi':['rafi'],
+            'imke':['imce'],
+            'marcel':['marsell'],
+            'jeske':['yeske'],
+        };
+
         var kinderen = document.querySelectorAll('.nm');
         var besteMatch = null, besteScore = 0, besteEl = null;
+        var gespWoord = gesproken.split(' ')[0];
+        var gespFon = fonNorm(gespWoord);
+
         kinderen.forEach(function(el){
             var kindEl = el.closest('.kind');
             if(!kindEl || kindEl.classList.contains('af')) return;
             var volledigeNaam = el.textContent.replace(/[🏫🔄]/g,'').trim();
             var naamLower = volledigeNaam.toLowerCase();
-            // Splits in woorden (voornaam, achternaam)
-            var woorden = naamLower.split(/\s+/);
+            var woorden = naamLower.replace(/-/g,' ').split(/\s+/);
             var score = 0;
-            // Exacte match volledige naam
-            if(gesproken.includes(naamLower)) score = 100;
-            // Match op voornaam alleen
-            else if(woorden[0] && woorden[0].length > 2 && gesproken.includes(woorden[0])) score = 80;
-            // Match op achternaam alleen
-            else if(woorden[1] && woorden[1].length > 2 && gesproken.includes(woorden[1])) score = 70;
-            // Gedeeltelijke match: begint naam met gesproken tekst?
-            else if(woorden[0] && woorden[0].startsWith(gesproken.split(' ')[0]) && gesproken.split(' ')[0].length > 2) score = 60;
-            // Fonetische match
-            else if(woorden[0] && gesproken.split(' ')[0]){
-                var fa=fonNorm(woorden[0]), fb=fonNorm(gesproken.split(' ')[0]);
-                if(fa===fb && fa.length>1) score=85;
-                else if(fa.length>2 && fb.length>2 && (fa.startsWith(fb.substring(0,3))||fb.startsWith(fa.substring(0,3)))) score=65;
-            }
-            // Levenshtein op voornaam
-            else if(woorden[0] && gesproken.split(' ')[0]){
-                var a=woorden[0], b=gesproken.split(' ')[0];
-                if(a.length>2 && b.length>2){
-                    // Simpele edit distance
-                    var m=a.length,n=b.length,d=[];
-                    for(var ii=0;ii<=m;ii++){d[ii]=[ii];}
-                    for(var jj=0;jj<=n;jj++){d[0][jj]=jj;}
-                    for(var ii=1;ii<=m;ii++) for(var jj=1;jj<=n;jj++){
-                        d[ii][jj]=a[ii-1]===b[jj-1]?d[ii-1][jj-1]:1+Math.min(d[ii-1][jj],d[ii][jj-1],d[ii-1][jj-1]);
-                    }
-                    var dist=d[m][n];
-                    if(dist<=2) score=50-dist*10;
+
+            // 1. Exacte volledige naam
+            if(gesproken === naamLower) score = 100;
+            // 2. Gesproken tekst bevat volledige naam
+            else if(gesproken.includes(naamLower)) score = 95;
+            // 3. Naam bevat gesproken tekst
+            else if(naamLower.includes(gesproken)) score = 90;
+            // 4. Alias match
+            else if((aliassen[woorden[0]]||[]).indexOf(gespWoord)>=0) score = 88;
+            else if((aliassen[gespWoord]||[]).indexOf(woorden[0])>=0) score = 88;
+            // 5. Voornaam match
+            else if(woorden[0] === gespWoord) score = 85;
+            // 6. Fonetische match voornaam
+            else if(fonNorm(woorden[0]) === gespFon && gespFon.length > 1) score = 80;
+            // 7. Achternaam match
+            else if(woorden[1] && woorden[1] === gespWoord) score = 75;
+            // 8. Achternaam fonetisch
+            else if(woorden[1] && fonNorm(woorden[1]) === gespFon) score = 70;
+            // 9. Begint met zelfde letters
+            else if(woorden[0].length>2 && gespWoord.length>2 && woorden[0].startsWith(gespWoord.substring(0,3))) score = 60;
+            else if(woorden[0].length>2 && gespWoord.length>2 && gespWoord.startsWith(woorden[0].substring(0,3))) score = 60;
+            // 10. Levenshtein edit distance
+            else if(woorden[0].length>2 && gespWoord.length>2){
+                var a=woorden[0],b=gespWoord,m=a.length,n=b.length,d=[];
+                for(var ii=0;ii<=m;ii++){d[ii]=[ii];}
+                for(var jj=0;jj<=n;jj++){d[0][jj]=jj;}
+                for(var ii=1;ii<=m;ii++) for(var jj=1;jj<=n;jj++){
+                    d[ii][jj]=a[ii-1]===b[jj-1]?d[ii-1][jj-1]:1+Math.min(d[ii-1][jj],d[ii][jj-1],d[ii-1][jj-1]);
                 }
+                if(d[m][n]<=2) score=55-d[m][n]*10;
+                // Ook fonetisch levenshtein
+                var fa=fonNorm(a),fb=fonNorm(b),fm=fa.length,fn2=fb.length,fd=[];
+                for(var ii=0;ii<=fm;ii++){fd[ii]=[ii];}
+                for(var jj=0;jj<=fn2;jj++){fd[0][jj]=jj;}
+                for(var ii=1;ii<=fm;ii++) for(var jj=1;jj<=fn2;jj++){
+                    fd[ii][jj]=fa[ii-1]===fb[jj-1]?fd[ii-1][jj-1]:1+Math.min(fd[ii-1][jj],fd[ii][jj-1],fd[ii-1][jj-1]);
+                }
+                if(fd[fm][fn2]<=1 && 55-fd[fm][fn2]*10 > score) score=55-fd[fm][fn2]*10;
             }
+
             if(score > besteScore){besteScore=score; besteMatch=volledigeNaam; besteEl=el;}
         });
         if(besteScore >= 50 && besteEl){
