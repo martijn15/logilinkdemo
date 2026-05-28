@@ -967,34 +967,79 @@ function startSpraak(){
 
         function fonNorm(s){
             return s.toLowerCase()
+                .replace(/-/g,' ').replace(/\./g,'')
                 .replace(/sch/g,'sk').replace(/ch/g,'k').replace(/ck/g,'k')
                 .replace(/ph/g,'f').replace(/th/g,'t')
                 .replace(/ij/g,'i').replace(/ei/g,'i').replace(/ie/g,'i')
-                .replace(/ou/g,'o').replace(/au/g,'o').replace(/oe/g,'u')
+                .replace(/ou/g,'o').replace(/au/g,'o').replace(/oe/g,'u').replace(/eu/g,'u')
                 .replace(/aa/g,'a').replace(/ee/g,'e').replace(/oo/g,'o').replace(/uu/g,'u')
-                .replace(/v/g,'f').replace(/w/g,'f').replace(/c/g,'k')
-                .replace(/z/g,'s').replace(/x/g,'ks').replace(/y/g,'i')
-                .replace(/-/g,'').replace(/\./g,'').replace(/[^a-z]/g,'');
+                .replace(/v/g,'f').replace(/w/g,'f')
+                .replace(/c([^h])/g,'k$1').replace(/c$/g,'k')
+                .replace(/z/g,'s').replace(/x/g,'ks')
+                .replace(/y/g,'i').replace(/yt/g,'it').replace(/sy/g,'si')
+                .replace(/[^a-z ]/g,'').trim();
         }
 
         var aliassen = {
-            'figo':['vigo'],'vigo':['figo'],
-            'carlijn':['karlijn'],'karlijn':['carlijn'],
-            'sytske':['sitske','siske','sutske'],
-            'gilyanne':['gillianne','giulianne'],
-            'jasmijn':['jasmin','yasmin','yasmijn'],
-            'jinthe':['jinte'],'jinte':['jinthe'],
-            'mirthe':['mirte'],
-            'tycho':['tiko','tyko'],
-            'sigrid':['sigrit'],
-            'hidde':['hide'],
-            'deven':['devin'],
-            'noah':['noa'],
-            'luc':['luck','luk'],
-            'ravi':['rafi'],
-            'imke':['imce'],
-            'marcel':['marsell'],
-            'jeske':['yeske'],
+            // Figo
+            'figo':['vigo','phigo','fiego'],
+            'vigo':['figo'],
+            // Carlijn
+            'carlijn':['karlijn','carlein','karlijne','carline'],
+            'karlijn':['carlijn','karleine'],
+            // Sytske - FRISIAN naam, veel variaties
+            'sytske':['sietske','sitske','siske','sutske','sytske','sijtske','seytske','sietske','sitsje'],
+            'sietske':['sytske','sitske','seytske'],
+            // Gilyanne
+            'gilyanne':['gillianne','giulianne','djilianne','gilianne','gillianne','giliane'],
+            // Jasmijn
+            'jasmijn':['jasmin','yasmin','yasmijn','jasmien','jazmin'],
+            'yasmin':['jasmijn','yasmijn'],
+            // Jinthe / Jinte
+            'jinthe':['jinte','yinte','ginte','djinte','jienthe'],
+            'jinte':['jinthe','yinte','ginte','djinte'],
+            // Mirthe
+            'mirthe':['mirte','mirde','mierte','myrthe'],
+            // Tycho
+            'tycho':['tiko','tyko','tico','tayco','teico'],
+            // Sigrid
+            'sigrid':['sigrit','siegrid','sigrit','sigriet'],
+            // Hidde
+            'hidde':['hide','hite','hiede'],
+            // Deven
+            'deven':['devin','dafen','defen'],
+            // Noah
+            'noah':['noa','noha','nowa'],
+            // Luc
+            'luc':['luck','luk','loek','luk'],
+            // Ravi
+            'ravi':['rafi','raffie','rahvi'],
+            // Imke
+            'imke':['imce','imkuh','ymke'],
+            'ymke':['imke'],
+            // Marcel
+            'marcel':['marsell','marseel','marsel'],
+            // Jeske
+            'jeske':['yeske','jske','geske'],
+            // Alexander
+            'alexander':['aleksander','allexander','alesander'],
+            // Benthe
+            'benthe':['bente','benth','bende'],
+            // Lauren
+            'lauren':['loren','lorren','lawren'],
+            // Tycho
+            'tycho':['tiko','tyko','tico'],
+            // Jinte
+            'jinte':['yinte','djinte','ginte','jinthe'],
+            // Jeske
+            'jeske':['ieske','yeske'],
+            // Sytske extra
+            'sytske':['sietske','sitske','seytske','sitsje','sytske'],
+            // Mare-linde
+            'marelinde':['marlinde','mare linde','marelinde','marliene'],
+            'mare-linde':['marlinde','marelinde','mare linde'],
+            // Gilyanne
+            'gilyanne':['gilianne','giulianne','djilianne'],
         };
 
         var kinderen = document.querySelectorAll('.nm');
