@@ -963,7 +963,7 @@ function startSpraak(){
         _spraakStatus = tekst;
         spraakBalkVernieuwen();
         // Check of kindernaam herkend
-        var kinderen = document.querySelectorAll('.ki .nm');
+        var kinderen = document.querySelectorAll('.nm');
         kinderen.forEach(function(el){
             var naam = el.textContent.replace('🏫','').replace('🔄','').trim().toLowerCase();
             if (tekst.toLowerCase().includes(naam) && naam.length > 2) {
